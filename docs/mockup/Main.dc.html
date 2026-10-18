@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Libreria</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Nunito:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1d6fb8}a:hover{color:#124a7c}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F2EE; font-family: Nunito, sans-serif; color: #1F1D1A; position: relative; overflow: hidden; display: flex; flex-direction: column">
+  <div style="padding: 28px 20px 0; display: flex; align-items: center; justify-content: space-between">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 14px; font-weight: 700; color: #6B6660">Ciao! Cosa ascoltiamo oggi?</span>
+      <h1 style="margin: 0; font-family: Fredoka, sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -0.5px">Libreria</h1>
+    </div>
+    <div style="display: flex; gap: 8px">
+      <button aria-label="Leggi una statuina con NFC" style="width: 48px; height: 48px; border-radius: 24px; border: 0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.06)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 8.5a6 6 0 0 1 0 7"></path><path d="M9.5 6a10 10 0 0 1 0 12"></path><path d="M13 3.5a14 14 0 0 1 0 17"></path></svg>
+      </button>
+      <button aria-label="Cerca" style="width: 48px; height: 48px; border-radius: 24px; border: 0; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.06)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 8px; padding: 18px 20px 0; overflow: hidden">
+    <button style="flex: none; height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #FFD43B; font-weight: 800; font-size: 15px; color: #1F1D1A; display: flex; align-items: center; gap: 6px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#E3262B" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.3C1 8 3.4 4.5 7 4.5c2 0 3.5 1.1 5 3 1.5-1.9 3-3 5-3 3.6 0 6 3.5 4.5 7.2C19.5 16.4 12 21 12 21z"></path></svg>Preferiti</button>
+    <button style="flex: none; height: 40px; padding: 0 18px; border-radius: 20px; border: 0; background: #1F1D1A; font-weight: 800; font-size: 15px; color: #FFFFFF">Tutte</button>
+    <button style="flex: none; height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #FFFFFF; font-weight: 800; font-size: 15px; color: #1F1D1A">Sul box</button>
+    <button style="flex: none; height: 40px; padding: 0 16px; border-radius: 20px; border: 0; background: #FFFFFF; font-weight: 800; font-size: 15px; color: #1F1D1A">Da sincronizzare</button>
+  </div>
+
+  <a href="ScegliId.dc.html" style="margin: 18px 20px 0; display: flex; align-items: center; gap: 14px; text-decoration: none; color: #1F1D1A; background: #FFFFFF; border-radius: 22px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05)">
+    <div style="width: 56px; height: 56px; border-radius: 16px; background: #E3262B; display: flex; align-items: center; justify-content: center; flex: none">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-family: Fredoka, sans-serif; font-weight: 600; font-size: 18px">Crea una nuova statuina</span>
+      <span style="font-size: 14px; color: #6B6660; font-weight: 700">Scegli i brani, un ID e scrivi il tag</span>
+    </div>
+  </a>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 10px; padding: 20px 20px 0">
+    <sc-for list="{{figures}}" as="f" hint-placeholder-count="6">
+      <a href="Playlist.dc.html" style="display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: #1F1D1A">
+        <div style="position: relative; aspect-ratio: 1; border-radius: 18px; background: {{f.bg}}; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; box-sizing: border-box">
+          <svg width="64" height="78" viewBox="0 0 64 78" aria-hidden="true">
+            <ellipse cx="32" cy="72" rx="26" ry="5" fill="#C81E23"></ellipse>
+            <rect x="6" y="66" width="52" height="6" rx="3" fill="#E3262B"></rect>
+            <rect x="14" y="26" width="36" height="42" rx="16" fill="{{f.body}}"></rect>
+            <circle cx="32" cy="22" r="17" fill="{{f.body}}"></circle>
+            <circle cx="18" cy="9" r="6" fill="{{f.body}}"></circle>
+            <circle cx="46" cy="9" r="6" fill="{{f.body}}"></circle>
+            <circle cx="26" cy="20" r="3.4" fill="#FFFFFF"></circle>
+            <circle cx="38" cy="20" r="3.4" fill="#FFFFFF"></circle>
+            <circle cx="26.5" cy="20.5" r="1.7" fill="#1F1D1A"></circle>
+            <circle cx="38.5" cy="20.5" r="1.7" fill="#1F1D1A"></circle>
+            <ellipse cx="32" cy="28" rx="5" ry="3.5" fill="#F7A8B8"></ellipse>
+            <ellipse cx="32" cy="48" rx="11" ry="13" fill="#FFFFFF" opacity="0.85"></ellipse>
+          </svg>
+          <sc-if value="{{f.onBox}}" hint-placeholder-val="{{ true }}">
+            <span style="position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 11px; background: #2E9E5B; display: flex; align-items: center; justify-content: center" aria-label="Sul box">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L19 7"></path></svg>
+            </span>
+          </sc-if>
+          <sc-if value="{{f.pending}}" hint-placeholder-val="{{ false }}">
+            <span style="position: absolute; top: 8px; right: 8px; height: 22px; padding: 0 8px; border-radius: 11px; background: #FFD43B; font-size: 11px; font-weight: 800; display: flex; align-items: center">Nuovi</span>
+          </sc-if>
+        </div>
+        <span style="font-family: Fredoka, sans-serif; font-weight: 600; font-size: 15px; line-height: 1.15">{{f.name}}</span>
+        <span style="font-size: 12px; font-weight: 700; color: #6B6660">{{f.meta}}</span>
+      </a>
+    </sc-for>
+  </div>
+
+  <div style="position: absolute; left: 12px; right: 12px; bottom: 84px; background: #FFFFFF; border-radius: 22px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.12)">
+    <div style="width: 46px; height: 46px; border-radius: 12px; background: #DCEBFA; flex: none"></div>
+    <div style="display: flex; flex-direction: column; min-width: 0; flex: 1">
+      <span style="font-family: Fredoka, sans-serif; font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">La vecchia fattoria</span>
+      <span style="font-size: 13px; font-weight: 700; color: #6B6660">Anteprima · Canzoni in macchina</span>
+    </div>
+    <button aria-label="Riproduci" style="width: 46px; height: 46px; border-radius: 23px; border: 3px solid #1F1D1A; background: #FFFFFF; display: flex; align-items: center; justify-content: center; flex: none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#1F1D1A" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"></path></svg>
+    </button>
+  </div>
+
+  <nav style="position: absolute; left: 0; right: 0; bottom: 0; height: 74px; background: #FFFFFF; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; border-top: 1px solid #ECE8E1">
+    <a href="Box.dc.html" aria-label="Box" style="display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #6B6660; font-size: 11px; font-weight: 800">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"></rect><circle cx="12" cy="14" r="3"></circle><circle cx="8.5" cy="8" r="1"></circle></svg>Box</a>
+    <a href="Scopri.dc.html" aria-label="Aggiungi" style="display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #6B6660; font-size: 11px; font-weight: 800">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11"></path><path d="M7.5 10.5L12 15l4.5-4.5"></path><path d="M5 19h14"></path></svg>Aggiungi</a>
+    <a href="Main.dc.html" aria-label="Libreria" style="display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #1F1D1A; font-size: 11px; font-weight: 800">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="4" height="16" rx="1"></rect><rect x="8" y="4" width="4" height="16" rx="1"></rect><path d="M13.5 5.5l3.8-1 3.2 14.5-3.8 1z"></path></svg>Libreria</a>
+    <a href="ScegliId.dc.html" aria-label="Crea" style="display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #6B6660; font-size: 11px; font-weight: 800">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="18" r="3"></circle><path d="M10 18V5l8-1.5v4L10 9"></path><path d="M19 13v6M16 16h6"></path></svg>Crea</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      figures: [
+        { name: 'Canzoni della nanna', meta: '1016 · 12 brani', bg: '#DCEBFA', body: '#7C7A86', onBox: true, pending: false },
+        { name: 'Canzoni in macchina', meta: '1017 · 18 brani', bg: '#FFF1C2', body: '#E89B2C', onBox: false, pending: true },
+        { name: 'Storie di nonna', meta: '1018 · 9 brani', bg: '#E3F4E6', body: '#4FA36B', onBox: true, pending: false },
+        { name: 'Inglese per piccoli', meta: '0200 · 24 brani', bg: '#FCE3E6', body: '#D9536A', onBox: true, pending: false },
+        { name: 'Ballo in cucina', meta: '0201 · 15 brani', bg: '#EDE6FA', body: '#7E5BC2', onBox: false, pending: true },
+        { name: 'Sigle dei cartoni', meta: '0600 · 20 brani', bg: '#DCEBFA', body: '#3C82C4', onBox: true, pending: false }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

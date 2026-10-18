@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Aggiungi brani</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Nunito:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1d6fb8}a:hover{color:#124a7c}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F2EE; font-family: Nunito, sans-serif; color: #1F1D1A; position: relative; overflow: hidden; display: flex; flex-direction: column">
+  <div style="padding: 28px 20px 0; display: flex; justify-content: space-between; align-items: flex-end">
+    <h1 style="margin: 0; font-family: Fredoka, sans-serif; font-weight: 700; font-size: 34px; letter-spacing: -0.5px">Aggiungi brani</h1>
+    <span style="height: 28px; padding: 0 10px; border-radius: 14px; background: #D6F0DF; color: #1E6B3E; font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 5px">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1E6B3E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L19 7"></path></svg>yt-dlp aggiornato</span>
+  </div>
+
+  <div style="margin: 18px 20px 0; background: #FFFFFF; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05)">
+    <label for="link" style="font-family: Fredoka, sans-serif; font-weight: 600; font-size: 17px">Link di YouTube</label>
+    <div style="display: flex; gap: 8px">
+      <input id="link" type="url" placeholder="https://youtu.be/…" style="flex: 1; min-width: 0; height: 50px; border-radius: 16px; border: 2px solid #E4DFD7; background: #FAF9F7; padding: 0 14px; font-size: 15px; font-weight: 700; color: #1F1D1A; box-sizing: border-box">
+      <button style="height: 50px; padding: 0 16px; border-radius: 16px; border: 0; background: #1F1D1A; color: #FFFFFF; font-weight: 800; font-size: 15px">Incolla</button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: #EAF3FC; font-size: 13px; font-weight: 700; color: #1E4E7A">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E4E7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.5"></circle><circle cx="6" cy="12" r="2.5"></circle><circle cx="18" cy="19" r="2.5"></circle><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"></path></svg>
+      Suggerimento: da YouTube tocca «Condividi» e scegli Cubetto. Funziona anche con le playlist intere.
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+      <span style="font-size: 14px; font-weight: 700; color: #6B6660">Aggiungi a</span>
+      <button style="height: 40px; padding: 0 12px 0 8px; border-radius: 20px; border: 0; background: #DCEBFA; font-weight: 800; font-size: 14px; color: #1F1D1A; display: flex; align-items: center; gap: 8px">
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #7C7A86"></span>Canzoni della nanna
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  <div style="margin: 14px 20px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+    <sc-for list="{{opts}}" as="o" hint-placeholder-count="4">
+      <div style="background: #FFFFFF; border-radius: 16px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px">
+        <span style="font-size: 13px; font-weight: 800; line-height: 1.2">{{o.label}}</span>
+        <span style="width: 40px; height: 24px; border-radius: 12px; background: {{o.track}}; position: relative; flex: none">
+          <span style="position: absolute; top: 3px; left: {{o.knob}}; width: 18px; height: 18px; border-radius: 9px; background: #FFFFFF"></span>
+        </span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 8px">
+    <span style="font-family: Fredoka, sans-serif; font-weight: 600; font-size: 18px">In coda</span>
+    <span style="font-size: 13px; font-weight: 700; color: #6B6660">Solo audio MP3 · continua in background</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 20px">
+    <sc-for list="{{queue}}" as="q" hint-placeholder-count="4">
+      <div style="background: #FFFFFF; border-radius: 18px; padding: 12px; display: flex; gap: 12px; align-items: center">
+        <div style="width: 64px; height: 44px; border-radius: 10px; background: {{q.thumb}}; flex: none"></div>
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px">
+          <span style="font-family: Fredoka, sans-serif; font-weight: 500; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{q.title}}</span>
+          <div style="height: 8px; border-radius: 4px; background: #EFEBE4; overflow: hidden">
+            <div style="height: 8px; width: {{q.pct}}; border-radius: 4px; background: {{q.bar}}"></div>
+          </div>
+          <span style="font-size: 12px; font-weight: 700; color: #6B6660">{{q.state}}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <nav style="position: absolute; left: 0; right: 0; bottom: 0; height: 74px; background: #FFFFFF; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; border-top: 1px solid #ECE8E1">
+    <a href="Box.dc.html" aria-label="Box" style="display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #6B6660; font-size: 11px; font-weight: 800">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"></rect><circle cx="12" cy="14" r="3"></circle><circle cx="8.5" cy="8" r="1"></circle></svg>Box</a>
+    <a href="Scopri.dc.html" aria-label="Aggiungi" style="display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #1F1D1A; font-size: 11px; font-weight: 800">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v11"></path><path d="M7.5 10.5L12 15l4.5-4.5"></path><path d="M5 19h14"></path></svg>Aggiungi</a>
+    <a href="Main.dc.html" aria-label="Libreria" style="display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #6B6660; font-size: 11px; font-weight: 800">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="4" height="16" rx="1"></rect><rect x="8" y="4" width="4" height="16" rx="1"></rect><path d="M13.5 5.5l3.8-1 3.2 14.5-3.8 1z"></path></svg>Libreria</a>
+    <a href="ScegliId.dc.html" aria-label="Crea" style="display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; color: #6B6660; font-size: 11px; font-weight: 800">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="18" r="3"></circle><path d="M10 18V5l8-1.5v4L10 9"></path><path d="M19 13v6M16 16h6"></path></svg>Crea</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const on = { track: '#2E9E5B', knob: '19px' };
+    const off = { track: '#CFC9C0', knob: '3px' };
+    return {
+      opts: [
+        { label: 'Volume uniformato', ...on },
+        { label: 'Taglia silenzi', ...on },
+        { label: 'Dividi per capitoli', ...off },
+        { label: 'Salta sponsor', ...on }
+      ],
+      queue: [
+        { title: 'Ninna nanna di Brahms – carillon', thumb: '#DCEBFA', pct: '100%', bar: '#2E9E5B', state: 'Pronto · 4:02' },
+        { title: 'Dormi dormi bel bambin', thumb: '#FFF1C2', pct: '64%', bar: '#FFC21A', state: 'Scarico… 64%' },
+        { title: 'Carillon della buonanotte (1 ora)', thumb: '#E3F4E6', pct: '20%', bar: '#3C82C4', state: 'Converto in MP3 · divido in 6 capitoli' },
+        { title: 'Stella stellina', thumb: '#FCE3E6', pct: '0%', bar: '#3C82C4', state: 'In attesa' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

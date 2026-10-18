@@ -1,6 +1,6 @@
 # Idea base – App Android per statuine FABA personalizzate
 
-> Stato: **proposta da discutere**. Nessun codice scritto finora.
+> Stato: **idea approvata, mockup pronto**. Nessun codice ancora.
 
 ## Obiettivo
 Un'app per genitori, con un aspetto giocoso e da bambini, che permette di:
@@ -61,5 +61,15 @@ Dettaglio playlist: come lo screenshot del Libro della giungla, con copertina gr
 - Android chiede il permesso USB la prima volta. Spuntando "usa sempre" si ottiene l'apertura e la sincronizzazione automatica.
 - La dimensione dell'APK sarà di circa 70 MB per arm64, a causa di Python e ffmpeg.
 
-## Domande aperte
-Vedi la risposta in chat.
+## Decisioni prese (18/10/2026)
+- Nome: **Cubetto**.
+- Input dei brani: solo incolla link e Condividi da YouTube, senza ricerca nell'app.
+- ID:
+  - lista completa di `TAGS.md` con scelta libera;
+  - **Consigliati** = ID di statuine in altre lingue (francese 0200–0300, spagnolo, olandese 1016–1031, latam 0600+) e ID liberi;
+  - avviso se l'ID copre una statuina italiana.
+  - Nota: nel registro non ci sono ID tedeschi; quelli 1000+ sono olandesi.
+- Android 8+ (minSdk 26), solo arm64-v8a.
+- Il FABA viene riconosciuto come USB mass storage: confermato dall'utente.
+- Tutte le funzioni QoL vengono mantenute.
+- Mockup: `docs/mockup/` (6 schermate).

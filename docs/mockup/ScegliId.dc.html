@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Scegli ID</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;family=Nunito:wght@600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1d6fb8}a:hover{color:#124a7c}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F4F2EE; font-family: Nunito, sans-serif; color: #1F1D1A; position: relative; overflow: hidden; display: flex; flex-direction: column">
+  <div style="padding: 24px 20px 0; display: flex; align-items: center; gap: 12px">
+    <a href="Main.dc.html" aria-label="Indietro" style="width: 48px; height: 48px; border-radius: 24px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.06); flex: none">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F1D1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+    </a>
+    <div style="display: flex; flex-direction: column">
+      <span style="font-size: 13px; font-weight: 800; color: #6B6660">Passo 2 di 3 · Nuova statuina</span>
+      <h1 style="margin: 0; font-family: Fredoka, sans-serif; font-weight: 700; font-size: 28px">Scegli un ID</h1>
+    </div>
+  </div>
+
+  <p style="margin: 12px 20px 0; font-size: 14px; font-weight: 700; color: #4F4A44; line-height: 1.35">Ogni statuina ha un numero. Ti consiglio quelli di storie in altre lingue: non rischi di coprire una statuina italiana che hai già.</p>
+
+  <div style="margin: 14px 20px 0; display: flex; gap: 8px">
+    <label for="cerca" style="flex: 1; height: 48px; border-radius: 16px; background: #FFFFFF; display: flex; align-items: center; gap: 8px; padding: 0 12px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B6660" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+      <input id="cerca" placeholder="Cerca numero o titolo" style="border: 0; outline: none; background: transparent; font-size: 15px; font-weight: 700; flex: 1; min-width: 0; color: #1F1D1A">
+    </label>
+    <button style="height: 48px; padding: 0 14px; border-radius: 16px; border: 0; background: #FFFFFF; font-weight: 800; font-size: 14px; color: #1F1D1A">A mano</button>
+  </div>
+
+  <div style="display: flex; gap: 8px; padding: 12px 20px 0">
+    <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="3">
+      <button onClick="{{tb.pick}}" style="height: 38px; padding: 0 14px; border-radius: 19px; border: 0; background: {{tb.bg}}; color: {{tb.fg}}; font-weight: 800; font-size: 14px">{{tb.label}}</button>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px 20px 0">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+      <button onClick="{{r.pick}}" style="border: 3px solid {{r.ring}}; background: #FFFFFF; border-radius: 18px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; text-align: left; color: #1F1D1A">
+        <span style="width: 64px; height: 44px; border-radius: 12px; background: #1F1D1A; color: #FFD43B; font-family: Fredoka, sans-serif; font-weight: 600; font-size: 19px; display: flex; align-items: center; justify-content: center; flex: none">{{r.id}}</span>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <span style="font-family: Fredoka, sans-serif; font-weight: 500; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</span>
+          <span style="display: flex; gap: 6px; align-items: center">
+            <span style="height: 20px; padding: 0 7px; border-radius: 10px; background: #EFEBE4; font-size: 11px; font-weight: 800; display: flex; align-items: center">{{r.lang}}</span>
+            <span style="height: 20px; padding: 0 7px; border-radius: 10px; background: {{r.tagBg}}; color: {{r.tagFg}}; font-size: 11px; font-weight: 800; display: flex; align-items: center">{{r.tag}}</span>
+          </span>
+        </span>
+      </button>
+    </sc-for>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px 22px; background: #FFFFFF; border-top: 1px solid #ECE8E1; display: flex; flex-direction: column; gap: 10px">
+    <span style="font-size: 13px; font-weight: 700; color: #6B6660">Sul tag verrà scritto <strong style="color: #1F1D1A">02190530{{sel}}00</strong></span>
+    <a href="Nfc.dc.html" style="height: 56px; border-radius: 28px; background: #E3262B; color: #FFFFFF; text-decoration: none; font-weight: 800; font-size: 17px; display: flex; align-items: center; justify-content: center; gap: 8px">Usa l'ID {{sel}}
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tab = this.state.tab ?? 'sugg';
+    const sel = this.state.sel ?? '1017';
+    const good = { tagBg: '#D6F0DF', tagFg: '#1E6B3E' };
+    const warn = { tagBg: '#FFE6CC', tagFg: '#8A4300' };
+    const used = { tagBg: '#E2E6F5', tagFg: '#2F3F7A' };
+    const all = [
+      { id: '1017', name: 'Klassieke pianomuziek', lang: 'Olandese', tag: 'Consigliato', ...good, k: 'sugg' },
+      { id: '1018', name: 'Rustige symfonieën van Mozart', lang: 'Olandese', tag: 'Consigliato', ...good, k: 'sugg' },
+      { id: '0200', name: 'Les trois petits cochons', lang: 'Francese', tag: 'Consigliato', ...good, k: 'sugg' },
+      { id: '0600', name: 'El gato con botas y otro cuento', lang: 'Latam', tag: 'Consigliato', ...good, k: 'sugg' },
+      { id: '1016', name: 'Faba•Me Rood', lang: 'Olandese', tag: 'Già tuo: Canzoni della nanna', ...used, k: 'mine' },
+      { id: '0010', name: 'Il mondo secondo Tea!', lang: 'Italiano', tag: 'Copre una statuina IT', ...warn, k: 'it' },
+      { id: '1032', name: 'Non presente nel registro', lang: 'Libero', tag: 'Mai usato', ...good, k: 'free' }
+    ];
+    const visible = tab === 'sugg' ? all.filter((r) => r.k === 'sugg' || r.k === 'free') : tab === 'free' ? all.filter((r) => r.k === 'free') : all;
+    const tabs = [['sugg', 'Consigliati'], ['all', 'Tutti (370)'], ['free', 'Liberi']].map(([k, label]) => ({
+      label,
+      bg: k === tab ? '#1F1D1A' : '#FFFFFF',
+      fg: k === tab ? '#FFFFFF' : '#1F1D1A',
+      pick: () => this.setState({ tab: k })
+    }));
+    return {
+      sel,
+      tabs,
+      rows: visible.slice(0, 6).map((r) => ({ ...r, ring: r.id === sel ? '#FFC21A' : '#FFFFFF', pick: () => this.setState({ sel: r.id }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>
