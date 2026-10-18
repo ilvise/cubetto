@@ -1,0 +1,257 @@
+package it.cubetto.app.ui
+
+import android.app.Application
+import android.net.Uri
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import it.cubetto.app.CubettoApp
+import it.cubetto.app.data.AudioOptions
+import it.cubetto.app.data.Playlist
+import it.cubetto.app.data.Track
+import it.cubetto.app.data.TrackStatus
+import it.cubetto.app.faba.IdAdvisor
+import it.cubetto.app.faba.IdOption
+import it.cubetto.app.nfc.NfcMode
+import it.cubetto.app.ytdlp.DownloadWorker
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
+
+data class PlaylistUi(
+    val playlist: Playlist,
+    val tracks: List<Track>,
+    val readyCount: Int,
+    val pendingCount: Int,
+    val errorCount: Int,
+    val durationSec: Int,
+    val needsSync: Boolean,
+    val onBox: Boolean,
+)
+
+data class AddState(val busy: Boolean = false, val added: Int? = null, val error: String? = null)
+
+class AppViewModel(app: Application) : AndroidViewModel(app) {
+    private val c = (app as CubettoApp).container
+    private val dao = c.db.dao()
+
+    val settings = c.settings.state
+    val box = c.usb.state
+    val sync = c.usb.sync
+    val ytDlp = c.ytDlp.status
+    val nfcResult = c.nfc.result
+    val nfcMode = c.nfc.mode
+    val nowPlaying = c.player.now
+
+    val playlists: StateFlow<List<PlaylistUi>> = combine(dao.playlists(), dao.allTracks(), c.usb.state) { ps, ts, box ->
+        val byPlaylist = ts.groupBy { it.playlistId }
+        val onBoxIds = (box as? it.cubetto.app.usb.BoxState.Connected)?.info?.figures?.map { it.id }?.toSet()
+        ps.map { p ->
+            val tracks = byPlaylist[p.id].orEmpty()
+            PlaylistUi(
+                playlist = p,
+                tracks = tracks,
+                readyCount = tracks.count { it.status == TrackStatus.READY },
+                pendingCount = tracks.count { it.status in PENDING },
+                errorCount = tracks.count { it.status == TrackStatus.ERROR },
+                durationSec = tracks.sumOf { it.durationSec },
+                needsSync = c.usb.needsSync(p, tracks),
+                onBox = if (onBoxIds != null) p.figureId in onBoxIds && p.syncedFigureId == p.figureId else p.syncedAt != null,
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    private val _add = MutableStateFlow(AddState())
+    val add: StateFlow<AddState> = _add.asStateFlow()
+
+    private val _message = MutableStateFlow<String?>(null)
+    val message: StateFlow<String?> = _message.asStateFlow()
+    fun consumeMessage() { _message.value = null }
+    fun showMessage(text: String) { _message.value = text }
+
+    // ---- Statuine / playlist ----
+
+    fun idOptions(language: String, excludePlaylist: Long? = null): List<IdOption> {
+        val used = playlists.value.filter { it.playlist.id != excludePlaylist }.associate { it.playlist.figureId to it.playlist.name }
+        return IdAdvisor.options(c.registry.figures, language, used)
+    }
+
+    fun knownName(id: String): String? = c.registry.byId(id).firstOrNull()?.name
+
+    suspend fun createPlaylist(name: String, color: Int, figureId: String): Long =
+        dao.insert(Playlist(name = name.trim(), figureId = figureId, color = color))
+
+    fun updatePlaylist(p: Playlist) = viewModelScope.launch { dao.update(p) }
+
+    fun toggleFavorite(p: Playlist) = updatePlaylist(p.copy(favorite = !p.favorite))
+
+    fun deletePlaylist(p: Playlist) = viewModelScope.launch(Dispatchers.IO) {
+        dao.getTracks(p.id).forEach { t ->
+            c.ytDlp.cancel(t.id.toString())
+            File(getApplication<Application>().filesDir, "audio/${t.id}").deleteRecursively()
+        }
+        p.coverPath?.let { File(it).delete() }
+        dao.delete(p)
+    }
+
+    fun setCover(p: Playlist, uri: Uri) = viewModelScope.launch(Dispatchers.IO) {
+        val ctx = getApplication<Application>()
+        val dir = File(ctx.filesDir, "covers").apply { mkdirs() }
+        val dest = File(dir, "${p.id}_${System.currentTimeMillis()}.jpg")
+        ctx.contentResolver.openInputStream(uri)?.use { input -> dest.outputStream().use { input.copyTo(it) } }
+        p.coverPath?.let { File(it).delete() }
+        dao.update(p.copy(coverPath = dest.absolutePath))
+    }
+
+    fun removeCover(p: Playlist) = viewModelScope.launch {
+        p.coverPath?.let { File(it).delete() }
+        dao.update(p.copy(coverPath = null))
+    }
+
+    // ---- Brani ----
+
+    fun addUrl(playlistId: Long, url: String) {
+        if (_add.value.busy) return
+        _add.value = AddState(busy = true)
+        viewModelScope.launch {
+            runCatching {
+                val videos = c.ytDlp.resolve(url.trim())
+                var pos = dao.maxPosition(playlistId)
+                dao.insertAll(videos.map { v ->
+                    Track(playlistId = playlistId, position = ++pos, title = v.title, sourceUrl = v.url, thumbnailUrl = v.thumbnail, durationSec = v.durationSec)
+                })
+                DownloadWorker.start(getApplication())
+                videos.size
+            }.onSuccess { _add.value = AddState(added = it) }
+                .onFailure { _add.value = AddState(error = it.message ?: it.javaClass.simpleName) }
+        }
+    }
+
+    fun resetAdd() { _add.value = AddState() }
+
+    fun retry(t: Track) = viewModelScope.launch {
+        dao.update(t.copy(status = TrackStatus.QUEUED, progress = 0, error = null))
+        DownloadWorker.start(getApplication())
+    }
+
+    fun retryAll(playlistId: Long) = viewModelScope.launch {
+        dao.getTracks(playlistId).filter { it.status == TrackStatus.ERROR }
+            .forEach { dao.update(it.copy(status = TrackStatus.QUEUED, progress = 0, error = null)) }
+        DownloadWorker.start(getApplication())
+    }
+
+    fun deleteTrack(t: Track) = viewModelScope.launch(Dispatchers.IO) {
+        c.ytDlp.cancel(t.id.toString())
+        if (c.player.now.value?.trackId == t.id) c.player.stop()
+        File(getApplication<Application>().filesDir, "audio/${t.id}").deleteRecursively()
+        dao.delete(t)
+        dao.updateAll(dao.getTracks(t.playlistId).mapIndexed { i, x -> x.copy(position = i + 1) })
+    }
+
+    fun renameTrack(t: Track, title: String) = viewModelScope.launch { dao.update(t.copy(title = title.trim())) }
+
+    /** Salva il nuovo ordine dopo un trascinamento. */
+    fun reorder(playlistId: Long, orderedIds: List<Long>) = viewModelScope.launch {
+        val byId = dao.getTracks(playlistId).associateBy { it.id }
+        dao.updateAll(orderedIds.mapIndexedNotNull { i, id -> byId[id]?.copy(position = i + 1) })
+    }
+
+    fun play(t: Track, playlistName: String) {
+        val path = t.localPath ?: return
+        c.player.play(t.id, path, t.title, playlistName)
+    }
+
+    fun togglePlayer() = c.player.toggle()
+    fun stopPlayer() = c.player.stop()
+
+    // ---- Box ----
+
+    fun refreshBox() = c.usb.refresh()
+    fun requestUsbPermission() = c.usb.requestPermission()
+    fun sync(p: Playlist) = viewModelScope.launch { c.usb.sync(p) }
+    fun syncAll() = viewModelScope.launch { c.syncAllPending() }
+    fun clearSync() = c.usb.clearSyncState()
+    fun backups() = c.usb.backups()
+    fun restore(b: it.cubetto.app.usb.Backup, done: (Boolean) -> Unit) = viewModelScope.launch { done(c.usb.restore(b)) }
+    fun deleteBackup(b: it.cubetto.app.usb.Backup) = c.usb.deleteBackup(b)
+    fun backupAll(done: (Int) -> Unit) = viewModelScope.launch { done(c.usb.backupAll()) }
+
+    // ---- NFC ----
+
+    fun startNfcWrite(figureId: String, force: Boolean = false) = c.nfc.start(NfcMode.Write(figureId, force))
+    fun startNfcRead() = c.nfc.start(NfcMode.Read)
+    fun stopNfc() = c.nfc.stop()
+
+    // ---- Impostazioni ----
+
+    fun setAudio(block: (AudioOptions) -> AudioOptions) = c.settings.update { it.copy(audio = block(it.audio)) }
+    fun setAutoSync(on: Boolean) = c.settings.update { it.copy(autoSync = on) }
+    fun dismissWarning() = c.settings.update { it.copy(warningDismissed = true) }
+    fun updateYtDlp() = viewModelScope.launch { c.ytDlp.updateIfNeeded(force = true) }
+    val ytDlpVersion: String? get() = c.ytDlp.version
+
+    fun updateRegistry(done: (Int?) -> Unit) = viewModelScope.launch { done(c.registry.update()) }
+    val registryCount: Int get() = c.registry.figures.size
+
+    fun setLanguage(tag: String?) {
+        AppCompatDelegate.setApplicationLocales(
+            if (tag == null) LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(tag)
+        )
+    }
+
+    // ---- Export / import (solo i link: l'audio si riscarica) ----
+
+    fun export(uri: Uri, done: (Boolean) -> Unit) = viewModelScope.launch {
+        val ok = withContext(Dispatchers.IO) {
+            runCatching {
+                val arr = JSONArray()
+                dao.allPlaylists().forEach { p ->
+                    val tracks = JSONArray()
+                    dao.getTracks(p.id).forEach { t ->
+                        tracks.put(JSONObject().put("title", t.title).put("url", t.sourceUrl).put("duration", t.durationSec).put("thumbnail", t.thumbnailUrl))
+                    }
+                    arr.put(JSONObject().put("name", p.name).put("figureId", p.figureId).put("color", p.color).put("favorite", p.favorite).put("tracks", tracks))
+                }
+                val json = JSONObject().put("app", "cubetto").put("version", 1).put("playlists", arr)
+                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { it.write(json.toString(2).toByteArray()) }
+                true
+            }.getOrDefault(false)
+        }
+        done(ok)
+    }
+
+    fun import(uri: Uri, done: (Int?) -> Unit) = viewModelScope.launch {
+        val count = withContext(Dispatchers.IO) {
+            runCatching {
+                val text = getApplication<Application>().contentResolver.openInputStream(uri)!!.bufferedReader().use { it.readText() }
+                val arr = JSONObject(text).getJSONArray("playlists")
+                for (i in 0 until arr.length()) {
+                    val o = arr.getJSONObject(i)
+                    val id = dao.insert(Playlist(name = o.getString("name"), figureId = o.getString("figureId"), color = o.optInt("color"), favorite = o.optBoolean("favorite")))
+                    val tracks = o.getJSONArray("tracks")
+                    dao.insertAll((0 until tracks.length()).map { j ->
+                        val t = tracks.getJSONObject(j)
+                        Track(playlistId = id, position = j + 1, title = t.getString("title"), sourceUrl = t.getString("url"), durationSec = t.optInt("duration"), thumbnailUrl = t.optString("thumbnail").ifBlank { null })
+                    })
+                }
+                arr.length()
+            }.getOrNull()
+        }
+        if (count != null) DownloadWorker.start(getApplication())
+        done(count)
+    }
+
+    companion object {
+        private val PENDING = setOf(TrackStatus.QUEUED, TrackStatus.DOWNLOADING, TrackStatus.CONVERTING)
+    }
+}

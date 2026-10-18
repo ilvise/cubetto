@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Classe 8 = USB Mass Storage: il FABA di prima generazione si presenta come una chiavetta -->
+    <usb-device class="8" />
+</resources>

@@ -1,6 +1,6 @@
 # Idea base – App Android per statuine FABA personalizzate
 
-> Stato: **idea approvata, mockup pronto**. Nessun codice ancora.
+> Stato: **prima versione del codice** (v0.1.0). Vedi README.md.
 
 ## Obiettivo
 Un'app per genitori, con un aspetto giocoso e da bambini, che permette di:
@@ -73,3 +73,12 @@ Dettaglio playlist: come lo screenshot del Libro della giungla, con copertina gr
 - Il FABA viene riconosciuto come USB mass storage: confermato dall'utente.
 - Tutte le funzioni QoL vengono mantenute.
 - Mockup: `docs/mockup/` (6 schermate).
+
+## Decisioni del 18/10/2026, seconda parte
+- Il marchio è indicato come **FABA™** in tutta l'app, con una nota sui marchi in Impostazioni → Informazioni e nel README.
+  - Il titolare indicato è FABA S.r.l., il produttore.
+  - Il ™ è stato preferito al ®, perché la registrazione del marchio non è stata verificata.
+- Lingue dell'app: it, es, ca, fr, nl (le lingue del registro TAGS.md) più en come fallback. Latam usa lo spagnolo.
+- ID consigliati: statuine vendute in lingue **diverse** da quella dell'app, più ID liberi (1032+).
+  - Le statuine "Neutral" (FABA•ME) non vengono mai consigliate.
+- Licenza GPL-3.0, la stessa di myfaba-hacks e youtubedl-android.
