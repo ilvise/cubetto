@@ -15,6 +15,7 @@ import it.cubetto.app.data.Playlist
 import it.cubetto.app.data.Track
 import it.cubetto.app.data.TrackStatus
 import it.cubetto.app.faba.Id3
+import it.cubetto.app.faba.Mp3Frames
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -99,6 +100,9 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
 
     /** Messo a true appena arriva lo scollegamento, prima di avere il lock: interrompe la lettura. */
     @Volatile private var detached = false
+
+    /** Chiamato quando ci sono brani da ricodificare prima di poterli copiare. */
+    var onNeedsReencode: (() -> Unit)? = null
 
     /** Chiamato quando il box viene collegato e il permesso è già concesso. */
     var onConnected: (() -> Unit)? = null
@@ -296,7 +300,12 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
     suspend fun sync(playlist: Playlist): Boolean = withContext(Dispatchers.IO) {
         mutex.withLock {
             val fs = fs ?: return@withLock false
-            val tracks = readyTracks(dao.getTracks(playlist.id))
+            // I brani in un formato che il box non riproduce (VBR) tornano in coda per la ricodifica
+            val (tracks, wrongFormat) = readyTracks(dao.getTracks(playlist.id)).partition { Mp3Frames.isFabaCompatible(File(it.localPath!!)) }
+            if (wrongFormat.isNotEmpty()) {
+                wrongFormat.forEach { dao.update(it.copy(status = TrackStatus.QUEUED, progress = 0)) }
+                onNeedsReencode?.invoke()
+            }
             val id = playlist.figureId
             _sync.value = SyncProgress(playlist.name, 0, tracks.size)
             if (tracks.isEmpty()) return@withLock fail(SyncError.NO_TRACKS)

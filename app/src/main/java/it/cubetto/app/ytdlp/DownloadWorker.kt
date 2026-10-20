@@ -37,6 +37,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
     private suspend fun process(track: Track) {
         if (track.isLocal) return convertLocal(track)
+        if (track.localPath != null && File(track.localPath).exists()) return reencode(track)
         dao.update(track.copy(status = TrackStatus.DOWNLOADING, progress = 0, error = null))
         val dir = File(applicationContext.filesDir, "audio/${track.id}")
         val options = container.settings.state.value.audio
@@ -87,6 +88,34 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
             dao.update(current.copy(localPath = out.absolutePath, status = TrackStatus.READY, progress = 100, durationSec = durationOf(out)))
         } catch (e: Exception) {
             dao.getTrack(track.id)?.let { dao.update(it.copy(status = TrackStatus.ERROR, error = e.message?.take(300))) }
+        }
+    }
+
+    /**
+     * Brano già scaricato ma nel formato sbagliato (VBR, prima della v0.2): si ricodifica
+     * il file che c'è già, senza riscaricarlo.
+     */
+    private suspend fun reencode(track: Track) {
+        dao.update(track.copy(status = TrackStatus.CONVERTING, progress = 0, error = null))
+        val tmp = File(applicationContext.filesDir, "reencode/${track.id}.mp3").apply { parentFile?.mkdirs() }
+        try {
+            File(track.localPath!!).copyTo(tmp, overwrite = true)
+            val dir = File(applicationContext.filesDir, "audio/${track.id}")
+            val options = container.settings.state.value.audio
+            var lastSaved = -1
+            val out = container.converter.convert(tmp, dir, track.title, track.durationSec, options, track.id.toString()) { pct ->
+                if (pct - lastSaved >= 5) {
+                    lastSaved = pct
+                    kotlinx.coroutines.runBlocking { dao.getTrack(track.id)?.let { dao.update(it.copy(progress = pct)) } }
+                }
+            }
+            val current = dao.getTrack(track.id) ?: return
+            if (current.localPath != out.absolutePath) File(current.localPath!!).delete()
+            dao.update(current.copy(localPath = out.absolutePath, status = TrackStatus.READY, progress = 100))
+        } catch (e: Exception) {
+            dao.getTrack(track.id)?.let { dao.update(it.copy(status = TrackStatus.ERROR, error = e.message?.take(300))) }
+        } finally {
+            tmp.delete()
         }
     }
 

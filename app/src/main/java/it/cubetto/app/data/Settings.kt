@@ -11,7 +11,10 @@ data class AudioOptions(
     val splitChapters: Boolean = false,
     val skipSponsors: Boolean = true,
     val mono: Boolean = true,
-)
+) {
+    /** Bitrate costante (CBR) come gli originali FABA™: 96 kbps mono, 128 kbps in stereo. */
+    val bitrateKbps: Int get() = if (mono) 96 else 128
+}
 
 data class AppSettings(
     val audio: AudioOptions = AudioOptions(),

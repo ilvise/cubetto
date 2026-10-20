@@ -4,6 +4,8 @@ import android.app.PendingIntent
 import android.content.Intent
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.util.UnstableApi
+import androidx.annotation.OptIn
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
@@ -14,6 +16,7 @@ import it.cubetto.app.R
 class PlaybackService : MediaSessionService() {
     private var session: MediaSession? = null
 
+    @OptIn(UnstableApi::class) // icona della notifica: API Media3 stabile di fatto
     override fun onCreate() {
         super.onCreate()
         val player = ExoPlayer.Builder(this)

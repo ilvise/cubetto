@@ -48,23 +48,28 @@ object Id3 {
         }
     }
 
-    /** Tag ID3v2.3 con il solo frame TIT2 (ISO-8859-1), come quello scritto da id3v2/createFigure.sh. */
+    /** Lunghezza del tag dei file originali FABA™: l'audio comincia sempre al byte 4096. */
+    const val TAG_SIZE = 4096
+
+    /**
+     * Tag identico a quello dei file originali FABA™: ID3v2.3 con il solo frame TIT2
+     * in UTF-16 (BOM FF FE, senza terminatore) e zeri di padding fino a [TAG_SIZE] byte.
+     */
     fun titleTag(title: String): ByteArray {
-        val text = title.toByteArray(Charsets.ISO_8859_1)
-        val frameSize = 1 + text.size
-        val frame = ByteArray(10 + frameSize)
-        "TIT2".toByteArray(Charsets.ISO_8859_1).copyInto(frame, 0)
-        frame[4] = (frameSize ushr 24).toByte(); frame[5] = (frameSize ushr 16).toByte()
-        frame[6] = (frameSize ushr 8).toByte(); frame[7] = frameSize.toByte()
-        frame[10] = 0 // encoding ISO-8859-1
-        text.copyInto(frame, 11)
-        val tagSize = frame.size
-        val header = byteArrayOf(
+        val text = byteArrayOf(0x01, 0xFF.toByte(), 0xFE.toByte()) + title.toByteArray(Charsets.UTF_16LE)
+        val tag = ByteArray(TAG_SIZE)
+        val body = TAG_SIZE - 10
+        byteArrayOf(
             'I'.code.toByte(), 'D'.code.toByte(), '3'.code.toByte(), 3, 0, 0,
-            ((tagSize ushr 21) and 0x7F).toByte(), ((tagSize ushr 14) and 0x7F).toByte(),
-            ((tagSize ushr 7) and 0x7F).toByte(), (tagSize and 0x7F).toByte(),
-        )
-        return header + frame
+            ((body ushr 21) and 0x7F).toByte(), ((body ushr 14) and 0x7F).toByte(),
+            ((body ushr 7) and 0x7F).toByte(), (body and 0x7F).toByte(),
+        ).copyInto(tag, 0)
+        "TIT2".toByteArray(Charsets.ISO_8859_1).copyInto(tag, 10)
+        tag[14] = (text.size ushr 24).toByte(); tag[15] = (text.size ushr 16).toByte()
+        tag[16] = (text.size ushr 8).toByte(); tag[17] = text.size.toByte()
+        // byte 18-19: flag del frame a zero
+        text.copyInto(tag, 20)
+        return tag
     }
 
     fun fabaTitle(figureId: String, track: Int) = "K${figureId}CP%02d".format(track)

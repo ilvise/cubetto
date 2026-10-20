@@ -129,7 +129,7 @@ class YtDlpManager(private val context: Context, private val settings: Settings)
             addOption("--no-mtime")
             addOption("-x")
             addOption("--audio-format", "mp3")
-            addOption("--audio-quality", "4")
+            addOption("--audio-quality", "${options.bitrateKbps}K") // CBR: il FABA™ non riproduce i VBR
             addOption("-o", "${dir.absolutePath}/audio.%(ext)s")
             if (split) {
                 addOption("--split-chapters")

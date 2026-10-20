@@ -5,6 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import it.cubetto.app.data.AppDatabase
 import it.cubetto.app.data.Settings
+import it.cubetto.app.data.TrackStatus
+import it.cubetto.app.faba.Mp3Frames
 import it.cubetto.app.faba.FigureRegistry
 import it.cubetto.app.nfc.NfcController
 import it.cubetto.app.playback.AudioPlayer
@@ -29,6 +31,19 @@ class AppContainer(app: Application) {
     val nfc = NfcController()
     val player = AudioPlayer(app)
 
+    /**
+     * Fino alla v0.1 i brani erano MP3 VBR, che il box non riproduce: una volta sola si
+     * rimettono in coda per ricodificarli in CBR come gli originali.
+     */
+    suspend fun requeueIncompatibleOnce(app: Application) {
+        val prefs = app.getSharedPreferences("migrations", android.content.Context.MODE_PRIVATE)
+        if (prefs.getBoolean("cbr_v1", false)) return
+        val dao = db.dao()
+        dao.readyTracks().filter { !Mp3Frames.isFabaCompatible(java.io.File(it.localPath!!)) }
+            .forEach { dao.update(it.copy(status = TrackStatus.QUEUED, progress = 0)) }
+        prefs.edit().putBoolean("cbr_v1", true).apply()
+    }
+
     /** Copia sul box tutte le playlist con modifiche (usata dalla sync automatica). */
     suspend fun syncAllPending(): Int {
         val dao = db.dao()
@@ -48,12 +63,14 @@ class CubettoApp : Application() {
         super.onCreate()
         container = AppContainer(this)
         createChannels()
+        container.usb.onNeedsReencode = { DownloadWorker.start(this) }
         container.usb.onConnected = {
             if (container.settings.state.value.autoSync) container.scope.launch { container.syncAllPending() }
         }
         container.scope.launch(Dispatchers.IO) {
             container.registry.load()
             container.db.dao().resetInterrupted()
+            container.requeueIncompatibleOnce(this@CubettoApp)
             container.ytDlp.init()
             if (container.db.dao().pendingCount() > 0) DownloadWorker.start(this@CubettoApp)
             else container.ytDlp.updateIfNeeded()

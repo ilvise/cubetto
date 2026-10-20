@@ -83,6 +83,9 @@ interface CubettoDao {
     @Query("SELECT * FROM Track ORDER BY playlistId, position")
     fun allTracks(): Flow<List<Track>>
 
+    @Query("SELECT * FROM Track WHERE status = 'READY' AND localPath IS NOT NULL")
+    suspend fun readyTracks(): List<Track>
+
     @Query("SELECT * FROM Track WHERE playlistId = :playlistId ORDER BY position")
     fun tracks(playlistId: Long): Flow<List<Track>>
 
