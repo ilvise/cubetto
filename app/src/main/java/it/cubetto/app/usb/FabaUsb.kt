@@ -80,7 +80,8 @@ data class Backup(val dir: File, val figureId: String, val date: Long, val files
 /**
  * Accesso al box FABA™ di prima generazione collegato in USB OTG: si presenta come
  * una chiavetta (mass storage FAT32). Usa libaums, quindi non serve root e non serve
- * che Android monti il dispositivo. I brani vanno in MKI01/K{ID}/CPnn.MKI.
+ * che Android monti il dispositivo. I brani vanno in MKI01/K{ID}/CPnn.MKI, con nomi
+ * corti 8.3 veri (vedi [FatShortNames]).
  */
 class FabaUsb(private val context: Context, private val dao: CubettoDao) {
     private val usbManager = context.getSystemService(UsbManager::class.java)
@@ -237,7 +238,9 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
         val fs = fs ?: return
         var info = BoxInfo(fs.volumeLabel.trim(), fs.capacity, fs.freeSpace, emptyList(), scanning = true)
         _state.value = BoxState.Connected(info)
-        val dirs = fs.rootDirectory.search(MKI_DIR)?.listFiles().orEmpty()
+        val mki = fs.rootDirectory.search(MKI_DIR)
+        mki?.let(::repairShortNames)
+        val dirs = mki?.listFiles().orEmpty()
             .filter { it.isDirectory && FIGURE_DIR.matches(it.name) }
             .sortedBy { it.name }
         info = info.copy(total = dirs.size)
@@ -252,9 +255,19 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
         _state.value = BoxState.Connected(info.copy(scanning = false))
     }
 
+    /**
+     * Le versioni precedenti scrivevano nomi corti generati da libaums, che il FABA™ non
+     * trova: si correggono alla lettura. Sui nomi già giusti (file originali) non scrive nulla.
+     */
+    private fun repairShortNames(file: UsbFile) {
+        runCatching { FatShortNames.fix(file) }.onFailure { Log.w(TAG, "short name ${file.name}", it) }
+    }
+
     /** La statuina nella cartella, o null se c'è solo il segnaposto (≤ [PLACEHOLDER_MAX_BYTES]). */
     private fun figureOf(dir: UsbFile): BoxFigure? {
+        repairShortNames(dir)
         val files = dir.listFiles().filter { !it.isDirectory }
+        files.filter { CP_FILE.matches(it.name) }.forEach(::repairShortNames)
         val bytes = files.sumOf { it.length }
         if (bytes <= PLACEHOLDER_MAX_BYTES) return null
         return BoxFigure(dir.name.substring(1), files.size, bytes)
@@ -291,6 +304,7 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
             try {
                 val root = fs.rootDirectory
                 val mki = root.search(MKI_DIR) ?: root.createDirectory(MKI_DIR)
+                FatShortNames.fix(mki)
 
                 // Se l'ID è cambiato, la vecchia cartella era nostra: la togliamo
                 val oldId = playlist.syncedFigureId
@@ -309,6 +323,8 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
                     files.forEach { it.delete() }
                 }
                 if (folder == null) folder = mki.createDirectory("K$id")
+                // Anche sulle cartelle e sui file già scritti: ripara le copie fatte prima della correzione
+                FatShortNames.fix(folder)
                 val prevIds = if (ours) playlist.syncedTrackIds!!.split(",") else emptyList()
 
                 val plan = tracks.mapIndexed { i, t ->
@@ -326,11 +342,13 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
                 plan.forEachIndexed { i, (t, name, size) ->
                     _sync.value = _sync.value?.copy(current = i + 1, skipped = skipped)
                     if (size < 0) {
+                        folder.search(name)?.let(FatShortNames::fix)
                         skipped++
                         return@forEachIndexed
                     }
                     folder.search(name)?.delete()
                     val file = folder.createFile(name)
+                    FatShortNames.fix(file)
                     // Allocare subito tutti i cluster e scrivere a blocchi grandi è molto più veloce
                     file.length = size
                     BufferedOutputStream(UsbFileOutputStream(file), WRITE_BUFFER).use { out ->
@@ -415,10 +433,13 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
             val fs = fs ?: return@withLock false
             runCatching {
                 val mki = fs.rootDirectory.search(MKI_DIR) ?: fs.rootDirectory.createDirectory(MKI_DIR)
+                FatShortNames.fix(mki)
                 mki.search("K${b.figureId}")?.delete()
                 val folder = mki.createDirectory("K${b.figureId}")
+                FatShortNames.fix(folder)
                 b.dir.listFiles().orEmpty().sortedBy { it.name }.forEach { src ->
-                    val f = folder.createFile(src.name)
+                    val f = folder.createFile(src.name.uppercase())
+                    FatShortNames.fix(f)
                     UsbFileStreamFactory.createBufferedOutputStream(f, fs).use { out -> src.inputStream().use { it.copyTo(out) } }
                 }
                 // Le playlist che usavano quell'ID non sono più sul box
