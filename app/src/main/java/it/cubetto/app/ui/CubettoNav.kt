@@ -19,7 +19,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -35,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import it.cubetto.app.R
 import it.cubetto.app.ui.components.MiniPlayer
+import it.cubetto.app.ui.components.PlayerSheet
 import it.cubetto.app.ui.screens.AddScreen
 import it.cubetto.app.ui.screens.BoxScreen
 import it.cubetto.app.ui.screens.ChangeIdScreen
@@ -81,6 +85,7 @@ fun CubettoRoot(vm: AppViewModel, event: LaunchEvent?, onEventHandled: () -> Uni
     val now by vm.nowPlaying.collectAsStateWithLifecycle()
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
+    var playerOpen by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); vm.consumeMessage() }
@@ -162,10 +167,8 @@ fun CubettoRoot(vm: AppViewModel, event: LaunchEvent?, onEventHandled: () -> Uni
                 composable(Routes.SETTINGS) { SettingsScreen(vm, onBack = { nav.popBackStack() }) }
             }
             now?.let {
-                MiniPlayer(
-                    it, onToggle = vm::togglePlayer, onClose = vm::stopPlayer,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                )
+                MiniPlayer(it, vm, onOpen = { playerOpen = true }, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
+                if (playerOpen) PlayerSheet(it, vm, onDismiss = { playerOpen = false })
             }
         }
     }

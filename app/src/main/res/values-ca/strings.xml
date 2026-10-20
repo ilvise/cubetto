@@ -128,7 +128,13 @@
     <string name="lang_catalan">Català</string>
     <string name="lang_neutral">Multilingüe</string>
     <string name="lang_free">Lliure</string>
-    <string name="preview_of">Previsualització · %1$s</string>
+    <string name="next_track">Cançó següent</string>
+    <string name="previous_track">Cançó anterior</string>
+    <string name="shuffle">Aleatori</string>
+    <string name="repeat">Repeteix</string>
+    <string name="now_playing">S\'està reproduint</string>
+    <string name="up_next">Cua de reproducció</string>
+    <string name="stop_player">Atura i tanca el reproductor</string>
     <string name="nfc_unavailable">Aquest telèfon no té NFC</string>
     <string name="nfc_disabled">L\'NFC està desactivat</string>
     <string name="nfc_open_settings">Obre la configuració NFC</string>

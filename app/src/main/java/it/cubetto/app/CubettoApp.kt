@@ -7,6 +7,7 @@ import it.cubetto.app.data.AppDatabase
 import it.cubetto.app.data.Settings
 import it.cubetto.app.faba.FigureRegistry
 import it.cubetto.app.nfc.NfcController
+import it.cubetto.app.playback.AudioPlayer
 import it.cubetto.app.usb.FabaUsb
 import it.cubetto.app.ytdlp.DownloadWorker
 import it.cubetto.app.ytdlp.LocalConverter
@@ -26,7 +27,7 @@ class AppContainer(app: Application) {
     val converter = LocalConverter(app, ytDlp)
     val usb = FabaUsb(app, db.dao())
     val nfc = NfcController()
-    val player = PreviewPlayer()
+    val player = AudioPlayer(app)
 
     /** Copia sul box tutte le playlist con modifiche (usata dalla sync automatica). */
     suspend fun syncAllPending(): Int {

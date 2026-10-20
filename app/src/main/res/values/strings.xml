@@ -131,7 +131,13 @@
     <string name="lang_neutral">Multilingual</string>
     <string name="lang_free">Free</string>
     <string name="id_badge" translatable="false">ID %1$s</string>
-    <string name="preview_of">Preview · %1$s</string>
+    <string name="next_track">Next song</string>
+    <string name="previous_track">Previous song</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="repeat">Repeat</string>
+    <string name="now_playing">Now playing</string>
+    <string name="up_next">Play queue</string>
+    <string name="stop_player">Stop and close the player</string>
     <string name="nfc_header" translatable="false">ID %1$s · %2$s</string>
     <string name="nfc_unavailable">This phone has no NFC</string>
     <string name="nfc_disabled">NFC is turned off</string>

@@ -128,7 +128,13 @@
     <string name="lang_catalan">Catalaans</string>
     <string name="lang_neutral">Meertalig</string>
     <string name="lang_free">Vrij</string>
-    <string name="preview_of">Voorbeeld · %1$s</string>
+    <string name="next_track">Volgend nummer</string>
+    <string name="previous_track">Vorig nummer</string>
+    <string name="shuffle">Willekeurig</string>
+    <string name="repeat">Herhalen</string>
+    <string name="now_playing">Speelt nu</string>
+    <string name="up_next">Afspeelwachtrij</string>
+    <string name="stop_player">Stoppen en speler sluiten</string>
     <string name="nfc_unavailable">Deze telefoon heeft geen NFC</string>
     <string name="nfc_disabled">NFC staat uit</string>
     <string name="nfc_open_settings">NFC-instellingen openen</string>

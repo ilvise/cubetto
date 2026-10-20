@@ -101,6 +101,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun toggleFavorite(p: Playlist) = updatePlaylist(p.copy(favorite = !p.favorite))
 
     fun deletePlaylist(p: Playlist) = viewModelScope.launch(Dispatchers.IO) {
+        withContext(Dispatchers.Main) { if (c.player.now.value?.playlistId == p.id) c.player.stop() }
         dao.getTracks(p.id).forEach { t ->
             cancelWork(t)
             File(getApplication<Application>().filesDir, "audio/${t.id}").deleteRecursively()
@@ -206,7 +207,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun deleteTrack(t: Track) = viewModelScope.launch(Dispatchers.IO) {
         cancelWork(t)
-        if (c.player.now.value?.trackId == t.id) c.player.stop()
+        withContext(Dispatchers.Main) { c.player.remove(t.id) }
         File(getApplication<Application>().filesDir, "audio/${t.id}").deleteRecursively()
         dao.delete(t)
         dao.updateAll(dao.getTracks(t.playlistId).mapIndexed { i, x -> x.copy(position = i + 1) })
@@ -220,12 +221,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         dao.updateAll(orderedIds.mapIndexedNotNull { i, id -> byId[id]?.copy(position = i + 1) })
     }
 
-    fun play(t: Track, playlistName: String) {
-        val path = t.localPath ?: return
-        c.player.play(t.id, path, t.title, playlistName)
-    }
+    /** Riproduce la playlist da [start] (o dall'inizio), con tutta la coda dei brani pronti. */
+    fun play(ui: PlaylistUi, start: Track? = null) = c.player.play(ui.playlist, ui.tracks, start?.id)
 
     fun togglePlayer() = c.player.toggle()
+    fun nextTrack() = c.player.next()
+    fun previousTrack() = c.player.previous()
+    fun seekTo(ms: Long) = c.player.seekTo(ms)
+    fun skipTo(index: Int) = c.player.skipTo(index)
+    fun toggleShuffle() = c.player.toggleShuffle()
+    fun cycleRepeat() = c.player.cycleRepeat()
     fun stopPlayer() = c.player.stop()
 
     // ---- Box ----

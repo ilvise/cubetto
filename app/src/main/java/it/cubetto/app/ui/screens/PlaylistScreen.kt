@@ -34,6 +34,7 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material3.AlertDialog
@@ -87,6 +88,7 @@ fun PlaylistScreen(vm: AppViewModel, id: Long, onBack: () -> Unit, onAdd: () -> 
     val playlists by vm.playlists.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
     val box by vm.box.collectAsStateWithLifecycle()
+    val now by vm.nowPlaying.collectAsStateWithLifecycle()
     val ui = playlists.firstOrNull { it.playlist.id == id } ?: return
     val p = ui.playlist
 
@@ -165,9 +167,14 @@ fun PlaylistScreen(vm: AppViewModel, id: Long, onBack: () -> Unit, onAdd: () -> 
                         onBox()
                     }
                     Spacer(Modifier.weight(1f))
-                    val first = ui.tracks.firstOrNull { it.status == TrackStatus.READY }
-                    Surface(onClick = { first?.let { vm.play(it, p.name) } }, shape = CircleShape, color = Cubo.Ink, modifier = Modifier.size(60.dp)) {
-                        Box(contentAlignment = Alignment.Center) { Icon(Icons.Rounded.PlayArrow, stringResource(R.string.play), tint = Color.White, modifier = Modifier.size(30.dp)) }
+                    Surface(onClick = { vm.play(ui) }, enabled = ui.readyCount > 0, shape = CircleShape, color = Cubo.Ink, modifier = Modifier.size(60.dp)) {
+                        val pause = now?.playlistId == p.id && now?.playing == true
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                if (pause) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, stringResource(if (pause) R.string.pause else R.string.play),
+                                tint = Color.White, modifier = Modifier.size(30.dp),
+                            )
+                        }
                     }
                 }
             }
@@ -194,8 +201,8 @@ fun PlaylistScreen(vm: AppViewModel, id: Long, onBack: () -> Unit, onAdd: () -> 
             items(order, key = { it.id }) { t ->
                 ReorderableItem(reorderState, key = t.id) { isDragging ->
                     TrackRow(
-                        t, order.indexOf(t) + 1, isDragging,
-                        onPlay = { vm.play(t, p.name) },
+                        t, order.indexOf(t) + 1, isDragging, playing = now?.trackId == t.id,
+                        onPlay = { vm.play(ui, t) },
                         onRetry = { vm.retry(t) },
                         onDelete = { vm.deleteTrack(t) },
                         onRename = { renamingTrack = t },
@@ -264,7 +271,7 @@ private fun NextSteps() {
 
 @Composable
 private fun TrackRow(
-    t: Track, number: Int, dragging: Boolean,
+    t: Track, number: Int, dragging: Boolean, playing: Boolean,
     onPlay: () -> Unit, onRetry: () -> Unit, onDelete: () -> Unit, onRename: () -> Unit,
     handle: @Composable () -> Unit,
 ) {
@@ -275,9 +282,12 @@ private fun TrackRow(
             .clickable(enabled = t.status == TrackStatus.READY, onClick = onPlay),
     ) {
         Row(Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("%02d".format(number), style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(34.dp))
+            Box(Modifier.width(34.dp)) {
+                if (playing) Icon(Icons.Rounded.GraphicEq, stringResource(R.string.now_playing), tint = Cubo.Red, modifier = Modifier.size(22.dp))
+                else Text("%02d".format(number), style = MaterialTheme.typography.titleMedium)
+            }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(t.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(t.title, style = MaterialTheme.typography.titleSmall, color = if (playing) Cubo.Red else Color.Unspecified, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 when (t.status) {
                     TrackStatus.READY -> Text(
                         "CP%02d".format(number) + (if (t.durationSec > 0) " · " + formatDuration(t.durationSec) else ""),
