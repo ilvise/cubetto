@@ -17,6 +17,13 @@
     <string name="filter_on_box">Sur la boîte</string>
     <string name="filter_to_sync">À copier</string>
     <string name="warning_official_app">Attention : en connectant la boîte FABA™ au logiciel d\'origine, les chansons pourraient être écrasées.</string>
+    <string name="box_scanning">Lecture en cours… %1$d/%2$d dossiers</string>
+    <string name="box_scanning_short">Lecture en cours…</string>
+    <string name="eject">Éjecter</string>
+    <string name="reread">Relire</string>
+    <string name="box_ejected">FABA™ éjectée</string>
+    <string name="box_ejected_hint">Vous pouvez la débrancher en toute sécurité.</string>
+    <string name="reconnect">Reconnecter</string>
     <string name="close">Fermer</string>
     <string name="create_new_figure">Créer une nouvelle figurine</string>
     <string name="create_new_figure_sub">Choisissez les titres, un ID et écrivez le tag</string>

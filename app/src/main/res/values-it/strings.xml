@@ -17,6 +17,13 @@
     <string name="filter_on_box">Sul box</string>
     <string name="filter_to_sync">Da copiare</string>
     <string name="warning_official_app">Attenzione: collegando il box FABA™ al programma originale le canzoni potrebbero essere sovrascritte.</string>
+    <string name="box_scanning">Lettura in corso… %1$d/%2$d cartelle</string>
+    <string name="box_scanning_short">Lettura in corso…</string>
+    <string name="eject">Espelli</string>
+    <string name="reread">Rileggi</string>
+    <string name="box_ejected">FABA™ espulso</string>
+    <string name="box_ejected_hint">Ora puoi scollegarlo in sicurezza.</string>
+    <string name="reconnect">Ricollega</string>
     <string name="close">Chiudi</string>
     <string name="create_new_figure">Crea una nuova statuina</string>
     <string name="create_new_figure_sub">Scegli i brani, un ID e scrivi il tag</string>

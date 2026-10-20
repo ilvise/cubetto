@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Eject
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.AlertDialog
@@ -79,7 +80,13 @@ fun BoxScreen(vm: AppViewModel, onOpen: (Long) -> Unit) {
 
     LazyColumn(contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 100.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item { Text(stringResource(R.string.box_title), style = MaterialTheme.typography.displaySmall) }
-        item { Hero(box, onPermission = vm::requestUsbPermission, onRetry = vm::refreshBox) }
+        item {
+            Hero(
+                box, busy = sync?.finished == false,
+                onPermission = vm::requestUsbPermission, onRetry = { vm.refreshBox(force = true) },
+                onEject = vm::ejectBox, onReread = { vm.refreshBox(force = true) },
+            )
+        }
 
         sync?.let { s ->
             item {
@@ -130,7 +137,15 @@ fun BoxScreen(vm: AppViewModel, onOpen: (Long) -> Unit) {
                     }) { Text(stringResource(R.string.backup_all)) }
                 }
             }
-            if (c.info.figures.isEmpty()) item { Text(stringResource(R.string.box_empty), color = Cubo.Muted, style = MaterialTheme.typography.bodyMedium) }
+            if (c.info.scanning) item {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Cubo.Blue)
+                    Text(
+                        if (c.info.total > 0) stringResource(R.string.box_scanning, c.info.scanned, c.info.total) else stringResource(R.string.box_scanning_short),
+                        color = Cubo.Muted, style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            } else if (c.info.figures.isEmpty()) item { Text(stringResource(R.string.box_empty), color = Cubo.Muted, style = MaterialTheme.typography.bodyMedium) }
             items(c.info.figures, key = { it.id }) { f ->
                 val mine = playlists.firstOrNull { it.playlist.figureId == f.id && it.playlist.syncedFigureId == f.id }
                 val name = mine?.playlist?.name ?: (vm.knownName(f.id)?.let { stringResource(R.string.original_suffix, it) }) ?: stringResource(R.string.unknown_figure)
@@ -195,7 +210,7 @@ fun BoxScreen(vm: AppViewModel, onOpen: (Long) -> Unit) {
 }
 
 @Composable
-private fun Hero(box: BoxState, onPermission: () -> Unit, onRetry: () -> Unit) {
+private fun Hero(box: BoxState, busy: Boolean, onPermission: () -> Unit, onRetry: () -> Unit, onEject: () -> Unit, onReread: () -> Unit) {
     val connected = box is BoxState.Connected
     Row(
         Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(26.dp)).background(if (connected) Cubo.Red else Cubo.Card).padding(18.dp),
@@ -214,6 +229,11 @@ private fun Hero(box: BoxState, onPermission: () -> Unit, onRetry: () -> Unit) {
                     Text(stringResource(R.string.box_permission_hint), style = MaterialTheme.typography.bodySmall, color = Cubo.Muted)
                     Button(onClick = onPermission, shape = RoundedCornerShape(50)) { Text(stringResource(R.string.box_allow)) }
                 }
+                BoxState.Ejected -> {
+                    Text(stringResource(R.string.box_ejected), style = MaterialTheme.typography.titleLarge, color = fg)
+                    Text(stringResource(R.string.box_ejected_hint), style = MaterialTheme.typography.bodySmall, color = Cubo.Muted)
+                    OutlinedButton(onClick = onRetry, shape = RoundedCornerShape(50)) { Text(stringResource(R.string.reconnect)) }
+                }
                 BoxState.Connecting -> {
                     Text(stringResource(R.string.box_connecting), style = MaterialTheme.typography.titleLarge, color = fg)
                     CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 3.dp)
@@ -229,6 +249,25 @@ private fun Hero(box: BoxState, onPermission: () -> Unit, onRetry: () -> Unit) {
                     Text(stringResource(R.string.box_connected_sub), style = MaterialTheme.typography.bodySmall, color = fg)
                     ProgressBar(if (box.info.capacity > 0) used / box.info.capacity.toFloat() else 0f, Cubo.Yellow, Modifier.padding(top = 6.dp), height = 10.dp, track = Color.White.copy(alpha = 0.3f))
                     Text(stringResource(R.string.box_space, formatBytes(used), formatBytes(box.info.capacity)), style = MaterialTheme.typography.labelMedium, color = fg)
+                    if (box.info.scanning) {
+                        ProgressBar(
+                            if (box.info.total > 0) box.info.scanned / box.info.total.toFloat() else 0f, Color.White,
+                            Modifier.padding(top = 2.dp), height = 4.dp, track = Color.White.copy(alpha = 0.3f),
+                        )
+                        Text(stringResource(R.string.box_scanning_short), style = MaterialTheme.typography.labelMedium, color = fg)
+                    }
+                    Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = onEject, enabled = !busy, shape = RoundedCornerShape(50),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Cubo.RedDark),
+                        ) {
+                            Icon(Icons.Rounded.Eject, null, modifier = Modifier.size(18.dp))
+                            Text(" " + stringResource(R.string.eject))
+                        }
+                        TextButton(onClick = onReread, enabled = !busy && !box.info.scanning) {
+                            Text(stringResource(R.string.reread), color = fg)
+                        }
+                    }
                 }
             }
         }

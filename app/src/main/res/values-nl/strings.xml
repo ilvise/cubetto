@@ -17,6 +17,13 @@
     <string name="filter_on_box">Op de box</string>
     <string name="filter_to_sync">Te kopiëren</string>
     <string name="warning_official_app">Let op: als je de FABA™-box met het originele programma verbindt, kunnen de liedjes worden overschreven.</string>
+    <string name="box_scanning">Bezig met lezen… %1$d/%2$d mappen</string>
+    <string name="box_scanning_short">Bezig met lezen…</string>
+    <string name="eject">Uitwerpen</string>
+    <string name="reread">Opnieuw lezen</string>
+    <string name="box_ejected">FABA™ uitgeworpen</string>
+    <string name="box_ejected_hint">Je kunt hem nu veilig loskoppelen.</string>
+    <string name="reconnect">Opnieuw verbinden</string>
     <string name="close">Sluiten</string>
     <string name="create_new_figure">Nieuw figuur maken</string>
     <string name="create_new_figure_sub">Kies de nummers, een ID en schrijf de tag</string>

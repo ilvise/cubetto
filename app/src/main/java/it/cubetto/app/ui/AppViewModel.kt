@@ -60,7 +60,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     val playlists: StateFlow<List<PlaylistUi>> = combine(dao.playlists(), dao.allTracks(), c.usb.state) { ps, ts, box ->
         val byPlaylist = ts.groupBy { it.playlistId }
-        val onBoxIds = (box as? it.cubetto.app.usb.BoxState.Connected)?.info?.figures?.map { it.id }?.toSet()
+        // Finché la lettura del box non è finita vale l'ultima copia registrata
+        val onBoxIds = (box as? it.cubetto.app.usb.BoxState.Connected)?.info?.takeIf { !it.scanning }?.figures?.map { it.id }?.toSet()
         ps.map { p ->
             val tracks = byPlaylist[p.id].orEmpty()
             PlaylistUi(
@@ -235,7 +236,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- Box ----
 
-    fun refreshBox() = c.usb.refresh()
+    fun refreshBox(force: Boolean = false) = c.usb.refresh(force)
+    fun ejectBox() = viewModelScope.launch { c.usb.eject() }
     fun requestUsbPermission() = c.usb.requestPermission()
     fun sync(p: Playlist) = viewModelScope.launch { c.usb.sync(p) }
     fun syncAll() = viewModelScope.launch { c.syncAllPending() }

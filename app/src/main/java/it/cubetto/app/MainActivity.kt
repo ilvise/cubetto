@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
                 URL.find(text)?.value?.let { event.value = LaunchEvent.Shared(it) }
             }
             UsbManager.ACTION_USB_DEVICE_ATTACHED -> {
-                container.usb.refresh()
+                container.usb.refresh(force = true)
                 event.value = LaunchEvent.UsbAttached
             }
         }

@@ -5,17 +5,21 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.core.content.IntentCompat
 import it.cubetto.app.data.CubettoDao
 import it.cubetto.app.data.Playlist
 import it.cubetto.app.data.Track
 import it.cubetto.app.data.TrackStatus
 import it.cubetto.app.faba.Id3
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +30,9 @@ import kotlinx.coroutines.withContext
 import me.jahnen.libaums.core.UsbMassStorageDevice
 import me.jahnen.libaums.core.fs.FileSystem
 import me.jahnen.libaums.core.fs.UsbFile
+import me.jahnen.libaums.core.fs.UsbFileOutputStream
 import me.jahnen.libaums.core.fs.UsbFileStreamFactory
+import java.io.BufferedOutputStream
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -34,13 +40,24 @@ import java.util.Locale
 
 data class BoxFigure(val id: String, val files: Int, val bytes: Long)
 
-data class BoxInfo(val label: String, val capacity: Long, val free: Long, val figures: List<BoxFigure>)
+/** [scanning]: lettura delle cartelle in corso ([scanned] su [total]); [figures] cresce man mano. */
+data class BoxInfo(
+    val label: String,
+    val capacity: Long,
+    val free: Long,
+    val figures: List<BoxFigure>,
+    val scanning: Boolean = false,
+    val scanned: Int = 0,
+    val total: Int = 0,
+)
 
 sealed interface BoxState {
     data object Disconnected : BoxState
     data object NeedsPermission : BoxState
     data object Connecting : BoxState
     data class Connected(val info: BoxInfo) : BoxState
+    /** Chiuso dall'utente: si può scollegare. Si riapre solo ricollegandolo o con "Ricollega". */
+    data object Ejected : BoxState
     data class Error(val message: String) : BoxState
 }
 
@@ -67,7 +84,8 @@ data class Backup(val dir: File, val figureId: String, val date: Long, val files
  */
 class FabaUsb(private val context: Context, private val dao: CubettoDao) {
     private val usbManager = context.getSystemService(UsbManager::class.java)
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    // Un errore USB (es. box scollegato a metà lettura) non deve mai far chiudere l'app
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e -> Log.e(TAG, "usb", e) })
     private val mutex = Mutex()
 
     private val _state = MutableStateFlow<BoxState>(BoxState.Disconnected)
@@ -78,14 +96,24 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
     private var device: UsbMassStorageDevice? = null
     private var fs: FileSystem? = null
 
+    /** Messo a true appena arriva lo scollegamento, prima di avere il lock: interrompe la lettura. */
+    @Volatile private var detached = false
+
     /** Chiamato quando il box viene collegato e il permesso è già concesso. */
     var onConnected: (() -> Unit)? = null
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context, intent: Intent) {
             when (intent.action) {
-                UsbManager.ACTION_USB_DEVICE_DETACHED -> scope.launch { mutex.withLock { closeLocked() } }
-                else -> refresh()
+                UsbManager.ACTION_USB_DEVICE_DETACHED -> {
+                    val gone = IntentCompat.getParcelableExtra(intent, UsbManager.EXTRA_DEVICE, UsbDevice::class.java)
+                    val ours = device?.usbDevice
+                    if (ours != null && gone != null && gone.deviceName != ours.deviceName) return
+                    detached = true
+                    _state.value = BoxState.Disconnected
+                    scope.launch { mutex.withLock { closeLocked() } }
+                }
+                else -> refresh(force = true)
             }
         }
     }
@@ -100,38 +128,89 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
         refresh()
     }
 
-    fun refresh() {
+    /**
+     * Apre il box se collegato e ne legge il contenuto. Se è già aperto rilegge solo con
+     * [force] (collegamento, permesso, "Rileggi"); dopo un'espulsione riapre solo con [force].
+     */
+    fun refresh(force: Boolean = false) {
         scope.launch {
             var newlyConnected = false
             mutex.withLock {
+                if (_state.value == BoxState.Ejected && !force) return@withLock
                 if (fs != null && _state.value is BoxState.Connected) {
-                    readInfoLocked()
+                    if (force) scanSafelyLocked()
                     return@withLock
                 }
-                val candidate = UsbMassStorageDevice.getMassStorageDevices(context).firstOrNull()
-                if (candidate == null) {
-                    closeLocked()
-                    return@withLock
-                }
-                if (!usbManager.hasPermission(candidate.usbDevice)) {
-                    _state.value = BoxState.NeedsPermission
-                    return@withLock
-                }
-                _state.value = BoxState.Connecting
-                runCatching {
-                    candidate.init()
-                    device = candidate
-                    fs = candidate.partitions.first().fileSystem
-                    readInfoLocked()
-                    newlyConnected = true
-                }.onFailure {
-                    Log.e(TAG, "open", it)
-                    runCatching { candidate.close() }
-                    device = null; fs = null
-                    _state.value = BoxState.Error(it.message ?: it.javaClass.simpleName)
-                }
+                if (!openLocked()) return@withLock
+                newlyConnected = scanSafelyLocked()
             }
             if (newlyConnected) onConnected?.invoke()
+        }
+    }
+
+    /**
+     * Apertura con più tentativi. Appena acceso il FABA™ spesso non è pronto e libaums,
+     * riprovando, riusa il buffer già avanzato: "newLimit > capacity: (49 > 36)".
+     * Si ricomincia quindi da zero con un oggetto dispositivo nuovo.
+     */
+    private suspend fun openLocked(): Boolean {
+        var last: Throwable? = null
+        for (attempt in 1..OPEN_ATTEMPTS) {
+            val candidate = UsbMassStorageDevice.getMassStorageDevices(context).firstOrNull()
+            if (candidate == null) {
+                closeLocked()
+                return false
+            }
+            if (!usbManager.hasPermission(candidate.usbDevice)) {
+                _state.value = BoxState.NeedsPermission
+                return false
+            }
+            _state.value = BoxState.Connecting
+            detached = false
+            try {
+                candidate.init()
+                device = candidate
+                fs = candidate.partitions.first().fileSystem
+                return true
+            } catch (e: Throwable) {
+                Log.w(TAG, "open attempt $attempt", e)
+                last = e
+                runCatching { candidate.close() }
+                device = null; fs = null
+                delay(attempt * 700L)
+            }
+        }
+        _state.value = BoxState.Error(last?.message ?: last?.javaClass?.simpleName.orEmpty())
+        return false
+    }
+
+    /** Legge il box; se la lettura fallisce riapre il dispositivo e ritenta una volta. */
+    private suspend fun scanSafelyLocked(): Boolean {
+        repeat(2) { attempt ->
+            try {
+                scanLocked()
+                return !detached
+            } catch (e: Throwable) {
+                Log.w(TAG, "scan attempt $attempt", e)
+                if (detached) {
+                    closeLocked()
+                    return false
+                }
+                runCatching { device?.close() }
+                device = null; fs = null
+                if (attempt == 0 && !openLocked()) return false
+            }
+        }
+        closeLocked()
+        _state.value = BoxState.Error("Lettura del box non riuscita")
+        return false
+    }
+
+    /** Espulsione sicura: aspetta la fine di copie e letture, poi chiude il dispositivo. */
+    suspend fun eject() = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            closeLocked()
+            _state.value = BoxState.Ejected
         }
     }
 
@@ -150,17 +229,44 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
         _state.value = BoxState.Disconnected
     }
 
-    private fun readInfoLocked() {
+    /**
+     * Lettura progressiva: prima spazio e capacità, poi una cartella alla volta, così la
+     * schermata Box si riempie mentre legge. Le cartelle con il solo segnaposto non contano.
+     */
+    private fun scanLocked() {
         val fs = fs ?: return
-        val mki = fs.rootDirectory.search(MKI_DIR)
-        val figures = mki?.listFiles().orEmpty()
+        var info = BoxInfo(fs.volumeLabel.trim(), fs.capacity, fs.freeSpace, emptyList(), scanning = true)
+        _state.value = BoxState.Connected(info)
+        val dirs = fs.rootDirectory.search(MKI_DIR)?.listFiles().orEmpty()
             .filter { it.isDirectory && FIGURE_DIR.matches(it.name) }
-            .map { dir ->
-                val files = dir.listFiles().filter { !it.isDirectory }
-                BoxFigure(dir.name.substring(1), files.size, files.sumOf { it.length })
-            }
-            .sortedBy { it.id }
-        _state.value = BoxState.Connected(BoxInfo(fs.volumeLabel.trim(), fs.capacity, fs.freeSpace, figures))
+            .sortedBy { it.name }
+        info = info.copy(total = dirs.size)
+        _state.value = BoxState.Connected(info)
+        val found = mutableListOf<BoxFigure>()
+        dirs.forEachIndexed { i, dir ->
+            if (detached) return
+            figureOf(dir)?.let { found += it }
+            info = info.copy(figures = found.toList(), scanned = i + 1)
+            _state.value = BoxState.Connected(info)
+        }
+        _state.value = BoxState.Connected(info.copy(scanning = false))
+    }
+
+    /** La statuina nella cartella, o null se c'è solo il segnaposto (≤ [PLACEHOLDER_MAX_BYTES]). */
+    private fun figureOf(dir: UsbFile): BoxFigure? {
+        val files = dir.listFiles().filter { !it.isDirectory }
+        val bytes = files.sumOf { it.length }
+        if (bytes <= PLACEHOLDER_MAX_BYTES) return null
+        return BoxFigure(dir.name.substring(1), files.size, bytes)
+    }
+
+    /** Dopo una scrittura si rilegge solo la cartella toccata, non tutto il box. */
+    private fun updateFiguresLocked(mki: UsbFile, vararg ids: String) {
+        val fs = fs ?: return
+        val info = (_state.value as? BoxState.Connected)?.info ?: return scanLocked()
+        val updated = ids.mapNotNull { id -> mki.search("K$id")?.let(::figureOf) }
+        val figures = (info.figures.filter { it.id !in ids } + updated).sortedBy { it.id }
+        _state.value = BoxState.Connected(info.copy(free = fs.freeSpace, figures = figures))
     }
 
     fun readyTracks(tracks: List<Track>) =
@@ -194,9 +300,13 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
                 var folder = mki.search("K$id")
                 var backupDone = false
                 if (folder != null && !ours) {
-                    backupLocked(fs, folder, id)
-                    backupDone = true
-                    folder.listFiles().forEach { it.delete() }
+                    // Il segnaposto da ~360 KB del FABA™ si sovrascrive e basta, senza backup
+                    val files = folder.listFiles().filter { !it.isDirectory }
+                    if (files.sumOf { it.length } > PLACEHOLDER_MAX_BYTES) {
+                        backupLocked(fs, folder, id)
+                        backupDone = true
+                    }
+                    files.forEach { it.delete() }
                 }
                 if (folder == null) folder = mki.createDirectory("K$id")
                 val prevIds = if (ours) playlist.syncedTrackIds!!.split(",") else emptyList()
@@ -221,7 +331,9 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
                     }
                     folder.search(name)?.delete()
                     val file = folder.createFile(name)
-                    UsbFileStreamFactory.createBufferedOutputStream(file, fs).use { out ->
+                    // Allocare subito tutti i cluster e scrivere a blocchi grandi è molto più veloce
+                    file.length = size
+                    BufferedOutputStream(UsbFileOutputStream(file), WRITE_BUFFER).use { out ->
                         Id3.writeFaba(File(t.localPath!!), id, i + 1, out)
                     }
                 }
@@ -238,9 +350,9 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
                     )
                 )
                 _sync.value = _sync.value?.copy(current = tracks.size, skipped = skipped, finished = true)
-                readInfoLocked()
+                updateFiguresLocked(mki, *listOfNotNull(id, oldId).toTypedArray())
                 true
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.e(TAG, "sync", e)
                 fail(SyncError.IO)
             }
@@ -270,10 +382,15 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
     suspend fun backupAll(): Int = withContext(Dispatchers.IO) {
         mutex.withLock {
             val fs = fs ?: return@withLock 0
-            val mki = fs.rootDirectory.search(MKI_DIR) ?: return@withLock 0
-            val dirs = mki.listFiles().filter { it.isDirectory && FIGURE_DIR.matches(it.name) }
-            dirs.forEach { backupLocked(fs, it, it.name.substring(1)) }
-            dirs.size
+            runCatching {
+                val mki = fs.rootDirectory.search(MKI_DIR) ?: return@withLock 0
+                val dirs = mki.listFiles().filter { it.isDirectory && FIGURE_DIR.matches(it.name) && figureOf(it) != null }
+                dirs.forEach { backupLocked(fs, it, it.name.substring(1)) }
+                dirs.size
+            }.getOrElse {
+                Log.e(TAG, "backup", it)
+                0
+            }
         }
     }
 
@@ -307,7 +424,7 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
                 // Le playlist che usavano quell'ID non sono più sul box
                 dao.allPlaylists().filter { it.syncedFigureId == b.figureId }
                     .forEach { dao.update(it.copy(syncedFigureId = null, syncedTrackIds = null)) }
-                readInfoLocked()
+                updateFiguresLocked(mki, b.figureId)
                 true
             }.getOrElse {
                 Log.e(TAG, "restore", it)
@@ -320,6 +437,11 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
         private const val TAG = "FabaUsb"
         const val MKI_DIR = "MKI01"
         const val MAX_TRACKS = 99
+
+        /** Ogni cartella ha un file segnaposto da ~360 KB: sotto questa soglia la cartella è "vuota". */
+        const val PLACEHOLDER_MAX_BYTES = 400 * 1024L
+        private const val OPEN_ATTEMPTS = 4
+        private const val WRITE_BUFFER = 512 * 1024
         private const val ACTION_PERMISSION = "it.cubetto.app.USB_PERMISSION"
         private val FIGURE_DIR = Regex("""K\d{4}""")
         private val CP_FILE = Regex("""CP(\d{2})(\.MKI)?""", RegexOption.IGNORE_CASE)
