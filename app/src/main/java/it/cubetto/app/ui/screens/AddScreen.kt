@@ -62,14 +62,18 @@ import it.cubetto.app.ui.theme.FigurePalette
 import it.cubetto.app.ytdlp.YtDlpStatus
 
 @Composable
-fun AddScreen(vm: AppViewModel, initialPlaylist: Long?, initialUrl: String, onCreate: () -> Unit) {
+fun AddScreen(vm: AppViewModel, initialPlaylist: Long?, onCreate: () -> Unit) {
     val playlists by vm.playlists.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
     val add by vm.add.collectAsStateWithLifecycle()
     val yt by vm.ytDlp.collectAsStateWithLifecycle()
     val clipboard = LocalClipboardManager.current
 
-    var url by rememberSaveable { mutableStateOf(initialUrl) }
+    val shared by vm.shared.collectAsStateWithLifecycle()
+    var url by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(shared) {
+        shared?.let { url = it; vm.resetAdd(); vm.consumeShared() }
+    }
     var target by rememberSaveable { mutableStateOf(initialPlaylist) }
     LaunchedEffect(playlists) {
         if (target == null || playlists.none { it.playlist.id == target }) target = playlists.firstOrNull()?.playlist?.id

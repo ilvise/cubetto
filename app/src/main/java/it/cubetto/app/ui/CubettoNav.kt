@@ -45,19 +45,17 @@ import it.cubetto.app.ui.screens.LibraryScreen
 import it.cubetto.app.ui.screens.PlaylistScreen
 import it.cubetto.app.ui.screens.SettingsScreen
 import it.cubetto.app.ui.theme.Cubo
-import android.net.Uri
 
 object Routes {
     const val BOX = "box"
-    const val ADD = "add?playlist={playlist}&url={url}"
+    const val ADD = "add?playlist={playlist}"
     const val LIBRARY = "library"
     const val CREATE = "create"
     const val PLAYLIST = "playlist/{id}"
     const val CHANGE_ID = "changeid/{id}"
     const val SETTINGS = "settings"
 
-    fun add(playlist: Long? = null, url: String? = null) =
-        "add?playlist=${playlist ?: -1}&url=${Uri.encode(url ?: "")}"
+    fun add(playlist: Long? = null) = "add?playlist=${playlist ?: -1}"
     fun playlist(id: Long) = "playlist/$id"
     fun changeId(id: Long) = "changeid/$id"
 }
@@ -66,7 +64,7 @@ private data class Tab(val route: String, val nav: String, val label: Int, val i
 
 private val tabs = listOf(
     Tab(Routes.BOX, Routes.BOX, R.string.tab_box, Icons.Rounded.Usb),
-    Tab(Routes.ADD, "add?playlist=-1&url=", R.string.tab_add, Icons.Rounded.Download),
+    Tab(Routes.ADD, Routes.add(), R.string.tab_add, Icons.Rounded.Download),
     Tab(Routes.LIBRARY, Routes.LIBRARY, R.string.tab_library, Icons.Rounded.LibraryMusic),
     Tab(Routes.CREATE, Routes.CREATE, R.string.tab_create, Icons.Rounded.MusicNote),
 )
@@ -89,13 +87,18 @@ fun CubettoRoot(vm: AppViewModel, event: LaunchEvent?, onEventHandled: () -> Uni
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); vm.consumeMessage() }
     }
-    LaunchedEffect(event) {
+    // Si naviga solo quando il grafo c'è già (all'avvio a freddo da condivisione/USB)
+    val graphReady = backStack != null
+    LaunchedEffect(event, graphReady) {
+        if (event == null || !graphReady) return@LaunchedEffect
         when (event) {
-            is LaunchEvent.Shared -> nav.navigate(Routes.add(url = event.url))
+            is LaunchEvent.Shared -> {
+                vm.share(event.url)
+                nav.navigateTab(Routes.add())
+            }
             LaunchEvent.UsbAttached -> nav.navigateTab(Routes.BOX)
-            null -> Unit
         }
-        if (event != null) onEventHandled()
+        onEventHandled()
     }
 
     Scaffold(
@@ -131,15 +134,11 @@ fun CubettoRoot(vm: AppViewModel, event: LaunchEvent?, onEventHandled: () -> Uni
                 composable(Routes.BOX) { BoxScreen(vm, onOpen = { nav.navigate(Routes.playlist(it)) }) }
                 composable(
                     Routes.ADD,
-                    arguments = listOf(
-                        navArgument("playlist") { type = NavType.LongType; defaultValue = -1L },
-                        navArgument("url") { type = NavType.StringType; defaultValue = "" },
-                    ),
+                    arguments = listOf(navArgument("playlist") { type = NavType.LongType; defaultValue = -1L }),
                 ) { entry ->
                     AddScreen(
                         vm,
                         initialPlaylist = entry.arguments?.getLong("playlist")?.takeIf { it > 0 },
-                        initialUrl = entry.arguments?.getString("url").orEmpty(),
                         onCreate = { nav.navigateTab(Routes.CREATE) },
                     )
                 }
@@ -173,7 +172,17 @@ fun CubettoRoot(vm: AppViewModel, event: LaunchEvent?, onEventHandled: () -> Uni
     }
 }
 
-private fun NavHostController.navigateTab(route: String) {
+/**
+ * Cambio di tab con stato salvato per ogni tab. La Libreria è la destinazione di
+ * partenza: per lei si svuota lo stack senza salvarlo, altrimenti Navigation
+ * associa alla Libreria lo stack tolto (es. "Aggiungi" aperto da una condivisione)
+ * e da quel momento ogni tap su Libreria lo ripristina invece di mostrarla.
+ */
+internal fun NavHostController.navigateTab(route: String) {
+    if (route == Routes.LIBRARY) {
+        if (!popBackStack(Routes.LIBRARY, inclusive = false)) navigate(Routes.LIBRARY)
+        return
+    }
     navigate(route) {
         popUpTo(graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true

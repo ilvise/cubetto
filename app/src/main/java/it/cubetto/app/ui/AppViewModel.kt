@@ -139,6 +139,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun resetAdd() { _add.value = AddState() }
 
+    /** Link arrivato da "Condividi": lo raccoglie la schermata Aggiungi. */
+    private val _shared = MutableStateFlow<String?>(null)
+    val shared: StateFlow<String?> = _shared.asStateFlow()
+    fun share(url: String) { _shared.value = url }
+    fun consumeShared() { _shared.value = null }
+
     fun retry(t: Track) = viewModelScope.launch {
         dao.update(t.copy(status = TrackStatus.QUEUED, progress = 0, error = null))
         DownloadWorker.start(getApplication())
