@@ -49,6 +49,14 @@ data class Track(
     val error: String? = null,
 )
 
+/** Prefisso di [Track.sourceUrl] per i file scelti dal dispositivo (il resto è il percorso della copia da convertire). */
+const val LOCAL_SOURCE = "file://"
+
+val Track.isLocal: Boolean get() = sourceUrl.startsWith(LOCAL_SOURCE)
+
+/** La copia del file del dispositivo in attesa di conversione (cancellata dopo). */
+val Track.localSource: java.io.File? get() = if (isLocal) java.io.File(sourceUrl.removePrefix(LOCAL_SOURCE)) else null
+
 @Dao
 interface CubettoDao {
     @Query("SELECT * FROM Playlist ORDER BY createdAt DESC")

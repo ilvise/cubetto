@@ -68,6 +68,10 @@
     <string name="add_resolving">Cercant vídeos…</string>
     <string name="add_button">Baixa només l\'àudio</string>
     <string name="add_error">No puc obrir l\'enllaç: %1$s</string>
+    <string name="from_device">MP3 del dispositiu</string>
+    <string name="from_device_hint">Tria un o més fitxers d\'àudio: es recodifiquen a MP3, s\'iguala el volum i es netegen les etiquetes ID3.</string>
+    <string name="pick_files">Tria fitxers</string>
+    <string name="import_error">No puc llegir el fitxer: %1$s</string>
     <string name="opt_normalize">Volum igualat</string>
     <string name="opt_normalize_hint">Totes les cançons al mateix volum</string>
     <string name="opt_trim">Retalla silencis</string>

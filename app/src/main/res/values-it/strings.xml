@@ -68,6 +68,10 @@
     <string name="add_resolving">Cerco i video…</string>
     <string name="add_button">Scarica solo l\'audio</string>
     <string name="add_error">Non riesco ad aprire il link: %1$s</string>
+    <string name="from_device">MP3 dal dispositivo</string>
+    <string name="from_device_hint">Scegli uno o più file audio: li ricodifico in MP3, uniformo il volume e ripulisco i tag ID3.</string>
+    <string name="pick_files">Scegli file</string>
+    <string name="import_error">Non riesco a leggere il file: %1$s</string>
     <string name="opt_normalize">Volume uniformato</string>
     <string name="opt_normalize_hint">Tutti i brani allo stesso volume</string>
     <string name="opt_trim">Taglia silenzi</string>

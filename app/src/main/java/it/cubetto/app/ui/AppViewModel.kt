@@ -2,6 +2,7 @@ package it.cubetto.app.ui
 
 import android.app.Application
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.AndroidViewModel
@@ -10,10 +11,14 @@ import it.cubetto.app.CubettoApp
 import it.cubetto.app.data.AudioOptions
 import it.cubetto.app.data.Playlist
 import it.cubetto.app.data.Track
+import it.cubetto.app.data.LOCAL_SOURCE
 import it.cubetto.app.data.TrackStatus
+import it.cubetto.app.data.isLocal
+import it.cubetto.app.data.localSource
 import it.cubetto.app.faba.IdAdvisor
 import it.cubetto.app.faba.IdOption
 import it.cubetto.app.nfc.NfcMode
+import it.cubetto.app.ytdlp.AudioMeta
 import it.cubetto.app.ytdlp.DownloadWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +44,7 @@ data class PlaylistUi(
     val onBox: Boolean,
 )
 
-data class AddState(val busy: Boolean = false, val added: Int? = null, val error: String? = null)
+data class AddState(val busy: Boolean = false, val added: Int? = null, val error: String? = null, val fileError: String? = null)
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val c = (app as CubettoApp).container
@@ -97,7 +102,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun deletePlaylist(p: Playlist) = viewModelScope.launch(Dispatchers.IO) {
         dao.getTracks(p.id).forEach { t ->
-            c.ytDlp.cancel(t.id.toString())
+            cancelWork(t)
             File(getApplication<Application>().filesDir, "audio/${t.id}").deleteRecursively()
         }
         p.coverPath?.let { File(it).delete() }
@@ -137,6 +142,49 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** File audio scelti dal dispositivo: copiati nell'app e messi in coda per ffmpeg. */
+    fun addFiles(playlistId: Long, uris: List<Uri>) {
+        if (_add.value.busy || uris.isEmpty()) return
+        _add.value = AddState(busy = true)
+        viewModelScope.launch(Dispatchers.IO) {
+            val ctx = getApplication<Application>()
+            val dir = File(ctx.filesDir, "import").apply { mkdirs() }
+            var added = 0
+            var failure: String? = null
+            for (uri in uris) {
+                val name = displayName(uri) ?: uri.lastPathSegment ?: "audio"
+                val copy = File(dir, "${System.nanoTime()}.${name.substringAfterLast('.', "audio").take(8)}")
+                runCatching {
+                    ctx.contentResolver.openInputStream(uri)!!.use { input -> copy.outputStream().use { input.copyTo(it) } }
+                    val meta = AudioMeta.read(copy)
+                    val title = meta.title?.let { t -> meta.artist?.let { "$it - $t" } ?: t } ?: name.substringBeforeLast('.')
+                    dao.insert(Track(
+                        playlistId = playlistId, position = dao.maxPosition(playlistId) + 1, title = title,
+                        sourceUrl = LOCAL_SOURCE + copy.absolutePath, durationSec = meta.durationSec,
+                    ))
+                    added++
+                }.onFailure { e ->
+                    copy.delete()
+                    failure = "$name: ${e.message ?: e.javaClass.simpleName}"
+                }
+            }
+            if (added > 0) DownloadWorker.start(ctx)
+            _add.value = if (added == 0 && failure != null) AddState(fileError = failure) else AddState(added = added, fileError = failure)
+        }
+    }
+
+    private fun displayName(uri: Uri): String? = runCatching {
+        getApplication<Application>().contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cur ->
+            if (cur.moveToFirst()) cur.getString(0) else null
+        }
+    }.getOrNull()
+
+    private fun cancelWork(t: Track) {
+        c.ytDlp.cancel(t.id.toString())
+        c.converter.cancel(t.id.toString())
+        t.localSource?.delete()
+    }
+
     fun resetAdd() { _add.value = AddState() }
 
     /** Link arrivato da "Condividi": lo raccoglie la schermata Aggiungi. */
@@ -157,7 +205,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun deleteTrack(t: Track) = viewModelScope.launch(Dispatchers.IO) {
-        c.ytDlp.cancel(t.id.toString())
+        cancelWork(t)
         if (c.player.now.value?.trackId == t.id) c.player.stop()
         File(getApplication<Application>().filesDir, "audio/${t.id}").deleteRecursively()
         dao.delete(t)
@@ -223,7 +271,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val arr = JSONArray()
                 dao.allPlaylists().forEach { p ->
                     val tracks = JSONArray()
-                    dao.getTracks(p.id).forEach { t ->
+                    // I file del dispositivo non hanno un link da cui riscaricarli
+                    dao.getTracks(p.id).filterNot { it.isLocal }.forEach { t ->
                         tracks.put(JSONObject().put("title", t.title).put("url", t.sourceUrl).put("duration", t.durationSec).put("thumbnail", t.thumbnailUrl))
                     }
                     arr.put(JSONObject().put("name", p.name).put("figureId", p.figureId).put("color", p.color).put("favorite", p.favorite).put("tracks", tracks))

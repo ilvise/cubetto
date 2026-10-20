@@ -1,5 +1,7 @@
 package it.cubetto.app.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,6 +28,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -79,6 +83,9 @@ fun AddScreen(vm: AppViewModel, initialPlaylist: Long?, onCreate: () -> Unit) {
         if (target == null || playlists.none { it.playlist.id == target }) target = playlists.firstOrNull()?.playlist?.id
     }
     LaunchedEffect(add.added) { if (add.added != null) url = "" }
+    val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        target?.let { vm.addFiles(it, uris) }
+    }
 
     val queue = playlists.flatMap { p -> p.tracks.map { it to p } }
         .filter { (t, _) -> t.status != TrackStatus.READY }
@@ -126,9 +133,27 @@ fun AddScreen(vm: AppViewModel, initialPlaylist: Long?, onCreate: () -> Unit) {
                             Text("  " + stringResource(R.string.add_resolving))
                         } else Text(stringResource(R.string.add_button), style = MaterialTheme.typography.labelLarge)
                     }
-                    add.added?.let { InfoBanner(pluralStringResource(R.plurals.added_tracks, it, it), Icons.Rounded.Check, Cubo.GreenSoft, Cubo.GreenInk) }
+                    add.added?.takeIf { it > 0 }?.let { InfoBanner(pluralStringResource(R.plurals.added_tracks, it, it), Icons.Rounded.Check, Cubo.GreenSoft, Cubo.GreenInk) }
                     add.error?.let { InfoBanner(stringResource(R.string.add_error, it), Icons.Rounded.ErrorOutline, Cubo.Orange, Cubo.OrangeInk) }
                 }
+            }
+        }
+        if (playlists.isNotEmpty()) item {
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Cubo.Card).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(stringResource(R.string.from_device), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.from_device_hint), style = MaterialTheme.typography.bodyMedium, color = Cubo.Muted)
+                OutlinedButton(
+                    onClick = { filePicker.launch(arrayOf("audio/*")) },
+                    enabled = !add.busy && target != null,
+                    modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(27.dp),
+                ) {
+                    Icon(Icons.Rounded.FolderOpen, null, modifier = Modifier.size(20.dp))
+                    Text("  " + stringResource(R.string.pick_files), style = MaterialTheme.typography.labelLarge)
+                }
+                add.fileError?.let { InfoBanner(stringResource(R.string.import_error, it), Icons.Rounded.ErrorOutline, Cubo.Orange, Cubo.OrangeInk) }
             }
         }
         item {

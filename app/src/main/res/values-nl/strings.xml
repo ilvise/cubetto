@@ -68,6 +68,10 @@
     <string name="add_resolving">Video\'s zoeken…</string>
     <string name="add_button">Alleen audio downloaden</string>
     <string name="add_error">Kan de link niet openen: %1$s</string>
+    <string name="from_device">MP3 van dit apparaat</string>
+    <string name="from_device_hint">Kies een of meer audiobestanden: ze worden opnieuw naar MP3 gecodeerd, het volume wordt gelijkgetrokken en de ID3-tags opgeschoond.</string>
+    <string name="pick_files">Bestanden kiezen</string>
+    <string name="import_error">Kan het bestand niet lezen: %1$s</string>
     <string name="opt_normalize">Gelijk volume</string>
     <string name="opt_normalize_hint">Alle nummers even hard</string>
     <string name="opt_trim">Stiltes weghalen</string>

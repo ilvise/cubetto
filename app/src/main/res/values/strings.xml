@@ -70,6 +70,10 @@
     <string name="add_resolving">Looking up videos…</string>
     <string name="add_button">Download audio only</string>
     <string name="add_error">Can\'t open the link: %1$s</string>
+    <string name="from_device">MP3 from this device</string>
+    <string name="from_device_hint">Pick one or more audio files: they\'re re-encoded to MP3, volume-levelled and their ID3 tags cleaned up.</string>
+    <string name="pick_files">Choose files</string>
+    <string name="import_error">Can\'t read the file: %1$s</string>
     <string name="opt_normalize">Even volume</string>
     <string name="opt_normalize_hint">All songs at the same loudness</string>
     <string name="opt_trim">Trim silences</string>

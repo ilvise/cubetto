@@ -15,6 +15,8 @@ import it.cubetto.app.CubettoApp
 import it.cubetto.app.R
 import it.cubetto.app.data.Track
 import it.cubetto.app.data.TrackStatus
+import it.cubetto.app.data.isLocal
+import it.cubetto.app.data.localSource
 import java.io.File
 
 /** Scarica in background, uno alla volta, tutti i brani in coda. */
@@ -34,6 +36,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
     }
 
     private suspend fun process(track: Track) {
+        if (track.isLocal) return convertLocal(track)
         dao.update(track.copy(status = TrackStatus.DOWNLOADING, progress = 0, error = null))
         val dir = File(applicationContext.filesDir, "audio/${track.id}")
         val options = container.settings.state.value.audio
@@ -56,12 +59,38 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
                 }
                 dao.replaceWithChapters(current, chapters)
             } else {
-                dao.update(current.copy(localPath = result.files.first().absolutePath, status = TrackStatus.READY, progress = 100))
+                val file = result.files.first()
+                dao.update(current.copy(localPath = file.absolutePath, status = TrackStatus.READY, progress = 100, durationSec = current.durationSec.takeIf { it > 0 } ?: durationOf(file)))
             }
         } catch (e: Exception) {
             dao.getTrack(track.id)?.let { dao.update(it.copy(status = TrackStatus.ERROR, error = e.message?.take(300))) }
         }
     }
+
+    /** File scelto dal dispositivo: sempre ricodificato e normalizzato con ffmpeg. */
+    private suspend fun convertLocal(track: Track) {
+        dao.update(track.copy(status = TrackStatus.CONVERTING, progress = 0, error = null))
+        val dir = File(applicationContext.filesDir, "audio/${track.id}")
+        val options = container.settings.state.value.audio
+        var lastSaved = -1
+        try {
+            val source = track.localSource!!
+            val out = container.converter.convert(source, dir, track.title, track.durationSec, options, track.id.toString()) { pct ->
+                if (pct - lastSaved >= 5) {
+                    lastSaved = pct
+                    kotlinx.coroutines.runBlocking { dao.getTrack(track.id)?.let { dao.update(it.copy(progress = pct)) } }
+                    runCatching { setForegroundAsync(foregroundInfo(track.title, pct)) }
+                }
+            }
+            val current = dao.getTrack(track.id) ?: return
+            source.delete()
+            dao.update(current.copy(localPath = out.absolutePath, status = TrackStatus.READY, progress = 100, durationSec = durationOf(out)))
+        } catch (e: Exception) {
+            dao.getTrack(track.id)?.let { dao.update(it.copy(status = TrackStatus.ERROR, error = e.message?.take(300))) }
+        }
+    }
+
+    private fun durationOf(file: File) = AudioMeta.read(file).durationSec
 
     private fun foregroundInfo(text: String, progress: Int): ForegroundInfo {
         val n = NotificationCompat.Builder(applicationContext, CubettoApp.CHANNEL_DOWNLOADS)

@@ -68,6 +68,10 @@
     <string name="add_resolving">Recherche des vidéos…</string>
     <string name="add_button">Télécharger l\'audio seulement</string>
     <string name="add_error">Impossible d\'ouvrir le lien : %1$s</string>
+    <string name="from_device">MP3 de l\'appareil</string>
+    <string name="from_device_hint">Choisissez un ou plusieurs fichiers audio : ils sont réencodés en MP3, le volume est égalisé et les tags ID3 nettoyés.</string>
+    <string name="pick_files">Choisir des fichiers</string>
+    <string name="import_error">Impossible de lire le fichier : %1$s</string>
     <string name="opt_normalize">Volume égalisé</string>
     <string name="opt_normalize_hint">Tous les titres au même volume</string>
     <string name="opt_trim">Couper les silences</string>

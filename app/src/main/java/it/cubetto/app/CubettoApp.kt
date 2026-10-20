@@ -9,6 +9,7 @@ import it.cubetto.app.faba.FigureRegistry
 import it.cubetto.app.nfc.NfcController
 import it.cubetto.app.usb.FabaUsb
 import it.cubetto.app.ytdlp.DownloadWorker
+import it.cubetto.app.ytdlp.LocalConverter
 import it.cubetto.app.ytdlp.YtDlpManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,7 @@ class AppContainer(app: Application) {
     val settings = Settings(app)
     val registry = FigureRegistry(app)
     val ytDlp = YtDlpManager(app, settings)
+    val converter = LocalConverter(app, ytDlp)
     val usb = FabaUsb(app, db.dao())
     val nfc = NfcController()
     val player = PreviewPlayer()
