@@ -16,7 +16,7 @@
     <string name="filter_all">Todas</string>
     <string name="filter_on_box">En la caja</string>
     <string name="filter_to_sync">Por copiar</string>
-    <string name="warning_official_app">No conectes la caja FABA™ a la app oficial: una actualización podría borrar tus figuras.</string>
+    <string name="warning_official_app">Atención: si conectas la caja FABA™ al programa original, las canciones podrían sobrescribirse.</string>
     <string name="close">Cerrar</string>
     <string name="create_new_figure">Crear una figura nueva</string>
     <string name="create_new_figure_sub">Elige las canciones, un ID y escribe la etiqueta</string>

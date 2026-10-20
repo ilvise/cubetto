@@ -16,7 +16,7 @@
     <string name="filter_all">Tutte</string>
     <string name="filter_on_box">Sul box</string>
     <string name="filter_to_sync">Da copiare</string>
-    <string name="warning_official_app">Non collegare il box FABA™ all\'app ufficiale: un aggiornamento potrebbe cancellare le tue statuine.</string>
+    <string name="warning_official_app">Attenzione: collegando il box FABA™ al programma originale le canzoni potrebbero essere sovrascritte.</string>
     <string name="close">Chiudi</string>
     <string name="create_new_figure">Crea una nuova statuina</string>
     <string name="create_new_figure_sub">Scegli i brani, un ID e scrivi il tag</string>

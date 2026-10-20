@@ -16,7 +16,7 @@
     <string name="filter_all">Totes</string>
     <string name="filter_on_box">A la caixa</string>
     <string name="filter_to_sync">Per copiar</string>
-    <string name="warning_official_app">No connectis la caixa FABA™ a l\'app oficial: una actualització podria esborrar les teves figures.</string>
+    <string name="warning_official_app">Atenció: si connectes la caixa FABA™ al programa original, les cançons es podrien sobreescriure.</string>
     <string name="close">Tanca</string>
     <string name="create_new_figure">Crea una figura nova</string>
     <string name="create_new_figure_sub">Tria les cançons, un ID i escriu l\'etiqueta</string>

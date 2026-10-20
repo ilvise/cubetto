@@ -17,7 +17,7 @@
     <string name="filter_all">All</string>
     <string name="filter_on_box">On the box</string>
     <string name="filter_to_sync">To copy</string>
-    <string name="warning_official_app">Don\'t connect the FABA™ box to the official app: an update could erase your figures.</string>
+    <string name="warning_official_app">Warning: connecting the FABA™ box to the original software could overwrite your songs.</string>
     <string name="close">Close</string>
     <string name="create_new_figure">Create a new figure</string>
     <string name="create_new_figure_sub">Pick the songs, an ID and write the tag</string>

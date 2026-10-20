@@ -16,7 +16,7 @@
     <string name="filter_all">Alle</string>
     <string name="filter_on_box">Op de box</string>
     <string name="filter_to_sync">Te kopiëren</string>
-    <string name="warning_official_app">Verbind de FABA™-box niet met de officiële app: een update kan je figuren wissen.</string>
+    <string name="warning_official_app">Let op: als je de FABA™-box met het originele programma verbindt, kunnen de liedjes worden overschreven.</string>
     <string name="close">Sluiten</string>
     <string name="create_new_figure">Nieuw figuur maken</string>
     <string name="create_new_figure_sub">Kies de nummers, een ID en schrijf de tag</string>

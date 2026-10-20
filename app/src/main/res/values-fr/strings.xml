@@ -16,7 +16,7 @@
     <string name="filter_all">Toutes</string>
     <string name="filter_on_box">Sur la boîte</string>
     <string name="filter_to_sync">À copier</string>
-    <string name="warning_official_app">Ne connectez pas la boîte FABA™ à l\'app officielle : une mise à jour pourrait effacer vos figurines.</string>
+    <string name="warning_official_app">Attention : en connectant la boîte FABA™ au logiciel d\'origine, les chansons pourraient être écrasées.</string>
     <string name="close">Fermer</string>
     <string name="create_new_figure">Créer une nouvelle figurine</string>
     <string name="create_new_figure_sub">Choisissez les titres, un ID et écrivez le tag</string>
