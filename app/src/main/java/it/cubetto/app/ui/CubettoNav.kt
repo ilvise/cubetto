@@ -1,7 +1,6 @@
 package it.cubetto.app.ui
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -21,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -126,8 +124,9 @@ fun CubettoRoot(vm: AppViewModel, event: LaunchEvent?, onEventHandled: () -> Uni
             }
         },
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
-            NavHost(nav, startDestination = Routes.LIBRARY) {
+        // Il player sta in una fascia sua sotto le schermate: non copre i pulsanti in basso
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            NavHost(nav, startDestination = Routes.LIBRARY, modifier = Modifier.weight(1f)) {
                 composable(Routes.LIBRARY) {
                     LibraryScreen(vm, onOpen = { nav.navigate(Routes.playlist(it)) }, onCreate = { nav.navigateTab(Routes.CREATE) }, onSettings = { nav.navigate(Routes.SETTINGS) }, onBox = { nav.navigateTab(Routes.BOX) })
                 }
@@ -165,7 +164,7 @@ fun CubettoRoot(vm: AppViewModel, event: LaunchEvent?, onEventHandled: () -> Uni
             now?.let {
                 MiniPlayer(
                     it, onToggle = vm::togglePlayer, onClose = vm::stopPlayer,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(PaddingValues(12.dp)),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 )
             }
         }
