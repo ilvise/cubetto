@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 108 108">
+  <!-- Icona dell'app (ic_launcher): cubetto rosso sorridente su fondo giallo -->
+  <rect width="108" height="108" rx="26" fill="#FFD43B"/>
+  <path fill="#B5161B" d="M42,36h24a10,10 0,0 1,10 10v24a10,10 0,0 1,-10 10h-24a10,10 0,0 1,-10 -10v-24a10,10 0,0 1,10 -10z"/>
+  <path fill="#E3262B" d="M42,32h24a10,10 0,0 1,10 10v24a10,10 0,0 1,-10 10h-24a10,10 0,0 1,-10 -10v-24a10,10 0,0 1,10 -10z"/>
+  <circle cx="45" cy="48" r="3.5" fill="#FFFFFF"/>
+  <circle cx="63" cy="48" r="3.5" fill="#FFFFFF"/>
+  <circle cx="45.5" cy="48.5" r="1.8" fill="#1F1D1A"/>
+  <circle cx="63.5" cy="48.5" r="1.8" fill="#1F1D1A"/>
+  <path d="M46,59q8,7 16,0" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+</svg>
