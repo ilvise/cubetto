@@ -111,11 +111,14 @@ class YtDlpManager(private val context: Context, private val settings: Settings)
         return if (id.isNotBlank()) "https://i.ytimg.com/vi/$id/hqdefault.jpg" else null
     }
 
-    /** Scarica solo l'audio in MP3 nella cartella [dir], applicando le opzioni scelte. */
-    suspend fun downloadMp3(
+    /**
+     * Scarica l'audio originale (senza ricodificarlo) nella cartella [dir]: la conversione in MP3
+     * la fa poi [LocalConverter], con lo stesso comando usato per i file del dispositivo.
+     * Con [splitChapters] restituisce un file per capitolo.
+     */
+    suspend fun downloadAudio(
         url: String,
         dir: File,
-        durationSec: Int,
         options: AudioOptions,
         processId: String,
         onProgress: (Float, String) -> Unit,
@@ -127,31 +130,29 @@ class YtDlpManager(private val context: Context, private val settings: Settings)
         val req = YoutubeDLRequest(url).apply {
             addOption("--no-playlist")
             addOption("--no-mtime")
-            addOption("-x")
-            addOption("--audio-format", "mp3")
-            addOption("--audio-quality", "${options.bitrateKbps}K") // CBR: il FABA™ non riproduce i VBR
-            addOption("-o", "${dir.absolutePath}/audio.%(ext)s")
+            addOption("-f", "bestaudio/best")
+            addOption("-o", "${dir.absolutePath}/source.%(ext)s")
             if (split) {
                 addOption("--split-chapters")
                 addOption("--write-info-json")
                 addOption("-o", "chapter:${dir.absolutePath}/ch_%(section_number)03d.%(ext)s")
             }
             if (options.skipSponsors) addOption("--sponsorblock-remove", "sponsor,selfpromo,interaction")
-            addOption("--postprocessor-args", "ExtractAudio:${ffmpegArgs(options, durationSec, split)}")
         }
         val response = YoutubeDL.getInstance().execute(req, processId) { progress, _, line -> onProgress(progress, line) }
         if (response.exitCode != 0) error(response.err.lines().lastOrNull { it.isNotBlank() } ?: "yt-dlp exit ${response.exitCode}")
 
-        val chapterFiles = dir.listFiles { f -> f.name.startsWith("ch_") && f.extension == "mp3" }?.sortedBy { it.name }.orEmpty()
-        val main = File(dir, "audio.mp3")
+        fun media(prefix: String) = dir.listFiles { f -> f.isFile && f.name.startsWith(prefix) && f.extension !in NOT_MEDIA }
+            ?.sortedBy { it.name }.orEmpty()
+        val chapterFiles = media("ch_")
+        val main = media("source.")
         if (split && chapterFiles.size > 1) {
             val chapters = readChapters(dir)
-            main.delete()
+            main.forEach { it.delete() }
             DownloadResult(chapterFiles, chapterFiles.indices.map { chapters.getOrNull(it) ?: Chapter("") })
         } else {
             chapterFiles.forEach { it.delete() }
-            if (!main.exists()) error("MP3 non trovato")
-            DownloadResult(listOf(main), emptyList())
+            DownloadResult(listOf(main.firstOrNull() ?: error("Audio non trovato")), emptyList())
         }
     }
 
@@ -169,31 +170,6 @@ class YtDlpManager(private val context: Context, private val settings: Settings)
         private const val TAG = "YtDlp"
         private const val DAY_MS = 24 * 60 * 60 * 1000L
 
-        /** Il taglio del silenzio finale usa areverse, che tiene in memoria la traccia: solo per brani brevi. */
-        private const val MAX_END_TRIM_SEC = 6 * 60
-
-        /**
-         * Il box non riproduce gli MP3 mono: l'opzione mono unisce i canali ma il file resta
-         * stereo (joint stereo) a 44,1 kHz come gli originali, con lo stesso audio a destra e a sinistra.
-         */
-        fun ffmpegArgs(options: AudioOptions, durationSec: Int, splitChapters: Boolean): String {
-            val filters = buildList {
-                if (options.mono) add("aformat=channel_layouts=mono,aformat=channel_layouts=stereo")
-                if (options.trimSilence && !splitChapters) {
-                    val trim = "silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.2"
-                    add(trim)
-                    if (durationSec in 1..MAX_END_TRIM_SEC) {
-                        add("areverse"); add(trim); add("areverse")
-                    }
-                }
-                if (options.normalize) add("loudnorm=I=-16:TP=-1.5:LRA=11")
-            }
-            val args = buildList {
-                add("-ac 2")
-                add("-ar 44100")
-                if (filters.isNotEmpty()) add("-af ${filters.joinToString(",")}")
-            }
-            return args.joinToString(" ")
-        }
+        private val NOT_MEDIA = setOf("json", "part", "ytdl", "tmp")
     }
 }

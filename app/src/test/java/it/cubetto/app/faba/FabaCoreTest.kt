@@ -55,7 +55,7 @@ class FabaCoreTest {
 
     @Test
     fun writeFabaStripsOldTagsAndSetsTitle() {
-        val oldTag = Id3.titleTag("Una canzone qualsiasi")
+        val oldTag = Id3.v2Tag("Una canzone qualsiasi", 0)
         val audio = ByteArray(5000) { (it % 251).toByte() }
         val v1 = ByteArray(128).also { "TAG".toByteArray().copyInto(it) }
         val src = File.createTempFile("src", ".mp3").apply { writeBytes(oldTag + audio + v1); deleteOnExit() }
@@ -63,8 +63,8 @@ class FabaCoreTest {
         val out = ByteArrayOutputStream()
         Id3.writeFaba(src, "1032", 7, out)
         val plain = out.toByteArray().also { FabaCipher.decrypt(it) }
-        val newTag = Id3.titleTag("K1032CP07")
-        assertArrayEquals(newTag + audio, plain)
+        val title = "K1032CP07"
+        assertArrayEquals(Id3.v2Tag(title, audio.size.toLong()) + audio + Id3.v1Tag(title), plain)
         assertEquals(plain.size.toLong(), Id3.encodedSize(src, "1032", 7))
     }
 

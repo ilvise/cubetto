@@ -43,24 +43,42 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         val options = container.settings.state.value.audio
         var lastSaved = -1
         try {
-            val result = container.ytDlp.downloadMp3(track.sourceUrl, dir, track.durationSec, options, track.id.toString()) { progress, _ ->
-                val pct = progress.toInt().coerceIn(0, 100)
-                if (pct != lastSaved && (pct - lastSaved >= 5 || pct == 100)) {
+            val result = container.ytDlp.downloadAudio(track.sourceUrl, dir, options, track.id.toString()) { progress, _ ->
+                val pct = progress.toInt().coerceIn(0, 99)
+                if (pct != lastSaved && pct - lastSaved >= 5) {
                     lastSaved = pct
-                    val status = if (pct >= 100) TrackStatus.CONVERTING else TrackStatus.DOWNLOADING
-                    kotlinx.coroutines.runBlocking { dao.getTrack(track.id)?.let { dao.update(it.copy(progress = pct, status = status)) } }
+                    kotlinx.coroutines.runBlocking { dao.getTrack(track.id)?.let { dao.update(it.copy(progress = pct)) } }
                     runCatching { setForegroundAsync(foregroundInfo(track.title, pct)) }
                 }
             }
+            // Poi la stessa conversione dei file del dispositivo, un file (o capitolo) alla volta
+            dao.getTrack(track.id)?.let { dao.update(it.copy(status = TrackStatus.CONVERTING, progress = 0)) } ?: return
+            val chapters = result.files.size > 1
+            val files = result.files.mapIndexed { i, src ->
+                val out = File(dir, if (chapters) "ch_%03d.mp3".format(i + 1) else "audio.mp3")
+                val title = result.chapters.getOrNull(i)?.title?.takeIf { it.isNotBlank() } ?: track.title
+                val duration = if (chapters) durationOf(src) else track.durationSec.takeIf { it > 0 } ?: durationOf(src)
+                var lastPct = -1
+                container.converter.encode(src, out, title, duration, options, trimSilence = options.trimSilence && !chapters, track.id.toString()) { p ->
+                    val pct = (i * 100 + p) / result.files.size
+                    if (pct - lastPct >= 5) {
+                        lastPct = pct
+                        kotlinx.coroutines.runBlocking { dao.getTrack(track.id)?.let { dao.update(it.copy(progress = pct)) } }
+                        runCatching { setForegroundAsync(foregroundInfo(track.title, pct)) }
+                    }
+                }
+                src.delete()
+                out
+            }
             val current = dao.getTrack(track.id) ?: return // brano eliminato nel frattempo
-            if (result.files.size > 1) {
-                val chapters = result.files.mapIndexed { i, f ->
+            if (chapters) {
+                val list = files.mapIndexed { i, f ->
                     val name = result.chapters.getOrNull(i)?.title?.takeIf { it.isNotBlank() } ?: "${track.title} (${i + 1})"
                     current.copy(id = 0, title = name, localPath = f.absolutePath, status = TrackStatus.READY, progress = 100, durationSec = 0)
                 }
-                dao.replaceWithChapters(current, chapters)
+                dao.replaceWithChapters(current, list)
             } else {
-                val file = result.files.first()
+                val file = files.first()
                 dao.update(current.copy(localPath = file.absolutePath, status = TrackStatus.READY, progress = 100, durationSec = current.durationSec.takeIf { it > 0 } ?: durationOf(file)))
             }
         } catch (e: Exception) {
@@ -68,7 +86,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
         }
     }
 
-    /** File scelto dal dispositivo: sempre ricodificato e normalizzato con ffmpeg. */
+    /** File scelto dal dispositivo: stessa conversione dei brani di YouTube. */
     private suspend fun convertLocal(track: Track) {
         dao.update(track.copy(status = TrackStatus.CONVERTING, progress = 0, error = null))
         val dir = File(applicationContext.filesDir, "audio/${track.id}")
@@ -92,7 +110,7 @@ class DownloadWorker(context: Context, params: WorkerParameters) : CoroutineWork
     }
 
     /**
-     * Brano già scaricato ma nel formato sbagliato (VBR, prima della v0.2): si ricodifica
+     * Brano già scaricato ma nel formato sbagliato (VBR o mono, prima della v0.2.1): si ricodifica
      * il file che c'è già, senza riscaricarlo.
      */
     private suspend fun reencode(track: Track) {

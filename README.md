@@ -24,7 +24,9 @@ link → MP3 → playlist → formato FABA™ con l'ID scelto → copia via USB 
   - **Consigliati** sono gli ID di statuine vendute in lingue *diverse* da quella dell'app, più gli ID liberi.
   - La scelta è sempre libera.
   - L'app avvisa se l'ID copre una statuina della tua lingua o un'altra tua statuina.
-- **Formato FABA™**: tutti i tag ID3 vengono rimossi e si scrive solo il titolo `K{ID}CP{NN}`. Poi il file viene cifrato
+- **Formato FABA™**: ogni sorgente (YouTube o file del dispositivo) passa per lo stesso comando ffmpeg: MP3 CBR
+  joint stereo 44,1 kHz come gli originali. I tag sono identici byte per byte a quelli di `createFigure.sh` di myfaba-hacks
+  (ID3v2.3 con titolo `K{ID}CP{NN}` e padding di id3lib, più ID3v1). Poi il file viene cifrato
   (rotazione di 3 bit e XOR con la chiave `30 05 19 20`) e salvato come `MKI01/K{ID}/CPnn.MKI`.
 - **Box via USB OTG** con [libaums](https://github.com/magnusja/libaums), senza root.
   - Collegando il box l'app si apre e copia automaticamente le statuine modificate.
