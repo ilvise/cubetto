@@ -236,7 +236,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- Box ----
 
-    fun refreshBox(force: Boolean = false) = c.usb.refresh(force)
+    fun refreshBox(force: Boolean = false) = c.usb.refresh(force, rescan = force)
     fun ejectBox() = viewModelScope.launch { c.usb.eject() }
     fun requestUsbPermission() = c.usb.requestPermission()
     fun sync(p: Playlist) = viewModelScope.launch { c.usb.sync(p) }

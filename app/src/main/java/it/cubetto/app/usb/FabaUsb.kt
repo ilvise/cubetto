@@ -29,6 +29,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import me.jahnen.libaums.core.UsbMassStorageDevice
+import me.jahnen.libaums.core.driver.BlockDeviceDriver
 import me.jahnen.libaums.core.fs.FileSystem
 import me.jahnen.libaums.core.fs.UsbFile
 import me.jahnen.libaums.core.fs.UsbFileOutputStream
@@ -97,6 +98,7 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
 
     private var device: UsbMassStorageDevice? = null
     private var fs: FileSystem? = null
+    private var partition: BlockDeviceDriver? = null
 
     /** Messo a true appena arriva lo scollegamento, prima di avere il lock: interrompe la lettura. */
     @Volatile private var detached = false
@@ -134,16 +136,18 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
     }
 
     /**
-     * Apre il box se collegato e ne legge il contenuto. Se è già aperto rilegge solo con
-     * [force] (collegamento, permesso, "Rileggi"); dopo un'espulsione riapre solo con [force].
+     * Apre il box se collegato e ne legge il contenuto; dopo un'espulsione riapre solo con [force]
+     * (collegamento, permesso). Se è già aperto rilegge solo con [rescan] ("Rileggi"): il
+     * collegamento arriva sia come broadcast sia come intent all'activity, e prima ognuno dei
+     * due rileggeva tutto il box.
      */
-    fun refresh(force: Boolean = false) {
+    fun refresh(force: Boolean = false, rescan: Boolean = false) {
         scope.launch {
             var newlyConnected = false
             mutex.withLock {
                 if (_state.value == BoxState.Ejected && !force) return@withLock
                 if (fs != null && _state.value is BoxState.Connected) {
-                    if (force) scanSafelyLocked()
+                    if (rescan) scanSafelyLocked()
                     return@withLock
                 }
                 if (!openLocked()) return@withLock
@@ -175,13 +179,15 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
             try {
                 candidate.init()
                 device = candidate
-                fs = candidate.partitions.first().fileSystem
+                val first = candidate.partitions.first()
+                partition = first
+                fs = first.fileSystem
                 return true
             } catch (e: Throwable) {
                 Log.w(TAG, "open attempt $attempt", e)
                 last = e
                 runCatching { candidate.close() }
-                device = null; fs = null
+                device = null; fs = null; partition = null
                 delay(attempt * 700L)
             }
         }
@@ -202,7 +208,7 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
                     return false
                 }
                 runCatching { device?.close() }
-                device = null; fs = null
+                device = null; fs = null; partition = null
                 if (attempt == 0 && !openLocked()) return false
             }
         }
@@ -231,6 +237,7 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
         runCatching { device?.close() }
         device = null
         fs = null
+        partition = null
         _state.value = BoxState.Disconnected
     }
 
@@ -240,7 +247,47 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
      */
     private fun scanLocked() {
         val fs = fs ?: return
-        var info = BoxInfo(fs.volumeLabel.trim(), fs.capacity, fs.freeSpace, emptyList(), scanning = true)
+        val info = BoxInfo(fs.volumeLabel.trim(), fs.capacity, fs.freeSpace, emptyList(), scanning = true)
+        _state.value = BoxState.Connected(info)
+        val fast = runCatching { fastScanLocked(info) }.onFailure { Log.w(TAG, "fast scan", it) }.getOrDefault(false)
+        if (!fast && !detached) libaumsScanLocked(info)
+    }
+
+    /**
+     * Lettura diretta del FAT32 con [FatScanner]. False se serve la lettura con libaums:
+     * niente MKI01 con il nome giusto, o cartelle scritte da vecchie versioni da riparare.
+     */
+    private fun fastScanLocked(start: BoxInfo): Boolean {
+        val scanner = FatScanner(partition ?: return false)
+        val mki = scanner.mkiEntry(MKI_DIR) ?: return false
+        if (mki.lfn) return false
+        var info = start
+        val found = mutableListOf<BoxFigure>()
+        var repair = false
+        scanner.scan(mki, FIGURE_DIR, cancelled = { detached || repair }, onTotal = { total ->
+            info = info.copy(total = total)
+            _state.value = BoxState.Connected(info)
+        }) { folder ->
+            if (folder.needsRepair) {
+                repair = true
+                return@scan
+            }
+            if (folder.bytes > PLACEHOLDER_MAX_BYTES) {
+                found += BoxFigure(folder.name.substring(1), folder.files, folder.bytes)
+                found.sortBy { it.id }
+            }
+            info = info.copy(figures = found.toList(), scanned = info.scanned + 1)
+            _state.value = BoxState.Connected(info)
+        }
+        if (repair || detached) return detached
+        _state.value = BoxState.Connected(info.copy(scanning = false))
+        return true
+    }
+
+    /** Lettura con libaums, cartella per cartella: più lenta, ma ripara i nomi corti sbagliati. */
+    private fun libaumsScanLocked(start: BoxInfo) {
+        val fs = fs ?: return
+        var info = start.copy(figures = emptyList(), scanned = 0)
         _state.value = BoxState.Connected(info)
         val mki = fs.rootDirectory.search(MKI_DIR)
         mki?.let(::repairShortNames)
