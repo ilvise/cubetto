@@ -8,3 +8,15 @@ captures/
 .kotlin/
 prova-box/
 K0*/
+
+# File audio (copie dal box, download di prova): mai nel repository
+*.MKI
+*.mki
+*.mp3
+*.m4a
+*.wav
+*.webm
+*.opus
+*.ogg
+*.flac
+*.aac
