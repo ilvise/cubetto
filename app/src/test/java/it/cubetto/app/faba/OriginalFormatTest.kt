@@ -1,5 +1,7 @@
 package it.cubetto.app.faba
 
+import it.cubetto.app.data.AudioOptions
+import it.cubetto.app.ytdlp.YtDlpManager
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -54,17 +56,17 @@ class OriginalFormatTest {
 
     // ---- Formato audio ----
 
-    /** Frame MPEG-1 Layer III a 44,1 kHz mono con il bitrate indicato (indice della tabella). */
-    private fun frame(bitrateIdx: Int): ByteArray {
+    /** Frame MPEG-1 Layer III a 44,1 kHz con il bitrate indicato (indice della tabella); joint stereo come gli originali. */
+    private fun frame(bitrateIdx: Int, mode: Int = 1): ByteArray {
         val kbps = intArrayOf(0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320)[bitrateIdx]
         val size = 144 * kbps * 1000 / 44100
         return ByteArray(size).also {
-            it[0] = 0xFF.toByte(); it[1] = 0xFB.toByte(); it[2] = (bitrateIdx shl 4).toByte(); it[3] = 0xC4.toByte()
+            it[0] = 0xFF.toByte(); it[1] = 0xFB.toByte(); it[2] = (bitrateIdx shl 4).toByte(); it[3] = ((mode shl 6) or 0x04).toByte()
         }
     }
 
-    private fun mp3(vararg bitrateIdx: Int): File {
-        val bytes = Id3.titleTag("x") + bitrateIdx.map(::frame).reduce { a, b -> a + b }
+    private fun mp3(vararg bitrateIdx: Int, mode: Int = 1): File {
+        val bytes = Id3.titleTag("x") + bitrateIdx.map { frame(it, mode) }.reduce { a, b -> a + b }
         return File.createTempFile("frames", ".mp3").apply { writeBytes(bytes); deleteOnExit() }
     }
 
@@ -80,5 +82,19 @@ class OriginalFormatTest {
     @Test
     fun variableBitrateIsRejected() {
         assertFalse(Mp3Frames.isFabaCompatible(mp3(4, 9, 11, 7)))
+    }
+
+    @Test
+    fun monoIsRejected() {
+        // I file mono, anche CBR a 96 kbps, non vengono riprodotti dal box
+        assertFalse(Mp3Frames.isFabaCompatible(mp3(7, 7, 7, 7, mode = Mp3Frames.MODE_MONO)))
+    }
+
+    @Test
+    fun monoOptionKeepsTwoChannels() {
+        val args = YtDlpManager.ffmpegArgs(AudioOptions(mono = true), 200, splitChapters = false)
+        assertTrue(args, args.startsWith("-ac 2 -ar 44100 -af aformat=channel_layouts=mono,aformat=channel_layouts=stereo,"))
+        val plain = YtDlpManager.ffmpegArgs(AudioOptions(normalize = false, trimSilence = false, mono = false), 200, false)
+        assertEquals("-ac 2 -ar 44100", plain)
     }
 }

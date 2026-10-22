@@ -32,16 +32,16 @@ class AppContainer(app: Application) {
     val player = AudioPlayer(app)
 
     /**
-     * Fino alla v0.1 i brani erano MP3 VBR, che il box non riproduce: una volta sola si
-     * rimettono in coda per ricodificarli in CBR come gli originali.
+     * Fino alla v0.2 i brani erano MP3 VBR o mono, che il box non riproduce: una volta sola si
+     * rimettono in coda per ricodificarli in CBR stereo come gli originali.
      */
     suspend fun requeueIncompatibleOnce(app: Application) {
         val prefs = app.getSharedPreferences("migrations", android.content.Context.MODE_PRIVATE)
-        if (prefs.getBoolean("cbr_v1", false)) return
+        if (prefs.getBoolean("stereo_v1", false)) return
         val dao = db.dao()
         dao.readyTracks().filter { !Mp3Frames.isFabaCompatible(java.io.File(it.localPath!!)) }
             .forEach { dao.update(it.copy(status = TrackStatus.QUEUED, progress = 0)) }
-        prefs.edit().putBoolean("cbr_v1", true).apply()
+        prefs.edit().putBoolean("stereo_v1", true).apply()
     }
 
     /** Copia sul box tutte le playlist con modifiche (usata dalla sync automatica). */

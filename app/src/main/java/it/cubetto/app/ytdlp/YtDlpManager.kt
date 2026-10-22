@@ -137,7 +137,7 @@ class YtDlpManager(private val context: Context, private val settings: Settings)
                 addOption("-o", "chapter:${dir.absolutePath}/ch_%(section_number)03d.%(ext)s")
             }
             if (options.skipSponsors) addOption("--sponsorblock-remove", "sponsor,selfpromo,interaction")
-            ffmpegArgs(options, durationSec, split)?.let { addOption("--postprocessor-args", "ExtractAudio:$it") }
+            addOption("--postprocessor-args", "ExtractAudio:${ffmpegArgs(options, durationSec, split)}")
         }
         val response = YoutubeDL.getInstance().execute(req, processId) { progress, _, line -> onProgress(progress, line) }
         if (response.exitCode != 0) error(response.err.lines().lastOrNull { it.isNotBlank() } ?: "yt-dlp exit ${response.exitCode}")
@@ -172,8 +172,13 @@ class YtDlpManager(private val context: Context, private val settings: Settings)
         /** Il taglio del silenzio finale usa areverse, che tiene in memoria la traccia: solo per brani brevi. */
         private const val MAX_END_TRIM_SEC = 6 * 60
 
-        fun ffmpegArgs(options: AudioOptions, durationSec: Int, splitChapters: Boolean): String? {
+        /**
+         * Il box non riproduce gli MP3 mono: l'opzione mono unisce i canali ma il file resta
+         * stereo (joint stereo) a 44,1 kHz come gli originali, con lo stesso audio a destra e a sinistra.
+         */
+        fun ffmpegArgs(options: AudioOptions, durationSec: Int, splitChapters: Boolean): String {
             val filters = buildList {
+                if (options.mono) add("aformat=channel_layouts=mono,aformat=channel_layouts=stereo")
                 if (options.trimSilence && !splitChapters) {
                     val trim = "silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.2"
                     add(trim)
@@ -184,11 +189,11 @@ class YtDlpManager(private val context: Context, private val settings: Settings)
                 if (options.normalize) add("loudnorm=I=-16:TP=-1.5:LRA=11")
             }
             val args = buildList {
-                if (options.mono) add("-ac 1")
-                if (filters.isNotEmpty() || options.mono) add("-ar 44100")
+                add("-ac 2")
+                add("-ar 44100")
                 if (filters.isNotEmpty()) add("-af ${filters.joinToString(",")}")
             }
-            return args.joinToString(" ").ifBlank { null }
+            return args.joinToString(" ")
         }
     }
 }

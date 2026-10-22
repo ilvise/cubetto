@@ -6,13 +6,16 @@ import java.io.RandomAccessFile
 /**
  * Lettura veloce delle intestazioni dei frame MP3, senza decodificare l'audio.
  * I file originali FABA™ sono MPEG-1 Layer III a bitrate costante (CBR 96 kbps,
- * 44,1 kHz, mono): i file VBR non vengono riprodotti dal box.
+ * 44,1 kHz, joint stereo): i file VBR e quelli mono non vengono riprodotti dal box.
  */
 object Mp3Frames {
     private val BITRATES = intArrayOf(0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320)
     private val SAMPLE_RATES = intArrayOf(44100, 48000, 32000)
 
-    data class Summary(val frames: Int, val bitratesKbps: Set<Int>, val sampleRates: Set<Int>) {
+    /** Modalità canale dell'intestazione: 0 stereo, 1 joint stereo, 2 dual channel, 3 mono. */
+    const val MODE_MONO = 3
+
+    data class Summary(val frames: Int, val bitratesKbps: Set<Int>, val sampleRates: Set<Int>, val channelModes: Set<Int>) {
         val constantBitrate get() = frames > 0 && bitratesKbps.size == 1
     }
 
@@ -20,6 +23,7 @@ object Mp3Frames {
         val range = Id3.audioRange(file)
         val bitrates = mutableSetOf<Int>()
         val rates = mutableSetOf<Int>()
+        val modes = mutableSetOf<Int>()
         var frames = 0
         RandomAccessFile(file, "r").use { raf ->
             var pos = range.first
@@ -41,16 +45,17 @@ object Mp3Frames {
                 val rate = SAMPLE_RATES[rateIdx]
                 bitrates += kbps
                 rates += rate
+                modes += (header ushr 6) and 3
                 frames++
                 pos += 144 * kbps * 1000 / rate + ((header ushr 9) and 1)
             }
         }
-        return Summary(frames, bitrates, rates)
+        return Summary(frames, bitrates, rates, modes)
     }
 
-    /** True se il file ha il formato che il box sa riprodurre: MPEG-1 Layer III CBR a 44,1 kHz. */
+    /** True se il file ha il formato che il box sa riprodurre: MPEG-1 Layer III CBR a 44,1 kHz, non mono. */
     fun isFabaCompatible(file: File): Boolean = runCatching {
         val s = summary(file)
-        s.constantBitrate && s.sampleRates == setOf(44100)
+        s.constantBitrate && s.sampleRates == setOf(44100) && MODE_MONO !in s.channelModes
     }.getOrDefault(false)
 }

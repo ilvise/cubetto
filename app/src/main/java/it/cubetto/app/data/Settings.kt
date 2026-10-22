@@ -12,7 +12,7 @@ data class AudioOptions(
     val skipSponsors: Boolean = true,
     val mono: Boolean = true,
 ) {
-    /** Bitrate costante (CBR) come gli originali FABA™: 96 kbps mono, 128 kbps in stereo. */
+    /** Bitrate costante (CBR) come gli originali FABA™ (96 kbps joint stereo); 128 kbps se i canali restano separati. */
     val bitrateKbps: Int get() = if (mono) 96 else 128
 }
 

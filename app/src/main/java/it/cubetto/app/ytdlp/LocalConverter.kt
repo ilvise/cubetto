@@ -45,8 +45,7 @@ class LocalConverter(private val context: Context, private val ytDlp: YtDlpManag
             // Solo la prima traccia audio: niente copertine, capitoli né metadati originali
             addAll(listOf("-map", "0:a:0", "-map_metadata", "-1", "-map_chapters", "-1"))
             // "-ac 1 -ar 44100 -af a,b": i filtri non contengono spazi
-            audio?.let { addAll(it.split(' ').filter(String::isNotBlank)) }
-            if (audio?.contains("-ar ") != true) addAll(listOf("-ar", "44100"))
+            addAll(audio.split(' ').filter(String::isNotBlank))
             addAll(listOf("-c:a", "libmp3lame", "-b:a", "${options.bitrateKbps}k")) // CBR come gli originali
             addAll(listOf("-id3v2_version", "3", "-write_id3v1", "0", "-metadata", "title=$title"))
             addAll(listOf("-progress", "pipe:1", "-nostats", out.absolutePath))
