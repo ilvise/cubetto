@@ -7,7 +7,7 @@
 **Statuine personalizzate per il FABA™ di prima generazione, a partire da YouTube o dai tuoi file audio.**
 
 ![Stato](https://img.shields.io/badge/stato-sperimentale-orange?style=for-the-badge)
-![Versione](https://img.shields.io/badge/versione-0.2.2-E3262B?style=for-the-badge)
+![Versione](https://img.shields.io/badge/versione-0.2.3-E3262B?style=for-the-badge)
 ![Licenza](https://img.shields.io/badge/licenza-GPL--3.0-blue?style=for-the-badge)
 
 ![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
@@ -20,8 +20,8 @@
 </div>
 
 > [!WARNING]
-> **Progetto sperimentale.** Il formato dei file è stato ricavato confrontando i brani originali con quelli di
-> myfaba-hacks e non è ancora verificato su tutti i box. Prima di copiare, l'app fa il backup delle cartelle che
+> **Progetto sperimentale.** Il formato dei file è identico a quello di myfaba-hacks, ma la copia dall'app
+> sul box non è ancora verificata su tutti i box. Prima di copiare, l'app fa il backup delle cartelle che
 > sovrascrive, ma la usi a tuo rischio.
 
 **Il flusso:** link o file → MP3 → playlist → formato FABA™ con l'ID scelto → copia via USB sul box → scrittura del tag NFC.
@@ -98,8 +98,8 @@ Italiano, spagnolo, catalano, francese, olandese (i paesi del registro FABA™) 
 | Passaggio | Dettaglio |
 |---|---|
 | 🎚️ Conversione | Ogni sorgente passa per **lo stesso comando ffmpeg**: prima traccia audio, filtri, MP3 CBR joint stereo 44,1 kHz (96 kbps, 128 kbps senza mono) |
-| 🏷️ Tag | Identici byte per byte a `createFigure.sh` di myfaba-hacks: ID3v2.3 con titolo `K{ID}CP{NN}` e padding di id3lib, più ID3v1 |
-| 🧩 Frame Info | Stessa intestazione dei file originali FABA™ (`FF FB 70 64`) |
+| 🏷️ Tag | Identici byte per byte a `redele.py` di myfaba-hacks: ID3v2.4 con il solo titolo `K{ID}CP{NN}` (UTF-8) e il padding di mutagen |
+| 🎼 Audio | Copiato così com'è dopo la conversione, senza altre modifiche |
 | 🔐 Cifratura | Rotazione di 3 bit e XOR con la chiave `30 05 19 20` |
 | 📁 Percorso | `MKI01/K{ID}/CPnn.MKI`, con veri nomi 8.3 |
 
@@ -119,6 +119,8 @@ Italiano, spagnolo, catalano, francese, olandese (i paesi del registro FABA™) 
 - Le traduzioni si modificano in `tools/strings.py`, poi si rigenerano con `python3 tools/strings.py`.
 - Per confrontare i brani con quelli originali del box:
   `FABA_ORIGINAL_DIR=/percorso/K0016 ./gradlew testDebugUnitTest`.
+- Per confrontarli con una cartella creata da `redele.py` (`in_k1000/` con gli MP3, `out_k1000/K1000/` con i .MKI):
+  `MYFABA_DIR=/percorso ./gradlew testDebugUnitTest`.
 
 ## 🗂️ Struttura del progetto
 

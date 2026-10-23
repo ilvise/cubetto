@@ -64,7 +64,7 @@ class FabaCoreTest {
         Id3.writeFaba(src, "1032", 7, out)
         val plain = out.toByteArray().also { FabaCipher.decrypt(it) }
         val title = "K1032CP07"
-        assertArrayEquals(Id3.v2Tag(title, audio.size.toLong()) + audio + Id3.v1Tag(title), plain)
+        assertArrayEquals(Id3.v2Tag(title, audio.size.toLong()) + audio, plain)
         assertEquals(plain.size.toLong(), Id3.encodedSize(src, "1032", 7))
     }
 

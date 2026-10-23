@@ -11,46 +11,60 @@ import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.io.File
 
-/** Confronto con myfaba-hacks (createFigure.sh: id3v2 + MKICipher) e con i file originali FABA™. */
+/** Confronto con myfaba-hacks (redele.py: mutagen + cifratura MKI) e con i file originali FABA™. */
 class OriginalFormatTest {
 
     private fun hex(s: String) = s.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
 
     /**
-     * Uscita reale di `id3v2 -D` e `id3v2 -A "Album Album" -a "Artist Artist" -T "1/1"
-     * -c "Converted for Faba Box" -t "K0016CP03"` (id3v2 0.1.12, id3lib 3.8.3) su un MP3 senza
-     * tag con 36675 byte di audio: ID3v2.3 di 189 byte (117 di frame e il resto zeri) e ID3v1.1.
+     * Inizio reale (decifrato) di K1000/CP01.MKI creato da redele.py con 2607096 byte di audio,
+     * provato funzionante sul box: ID3v2.4, TIT2 UTF-8 con terminatore, 3631 byte di padding.
      */
-    private val id3v2Frames = hex(
-        "54414c420000000c000000416c62756d20416c62756d545045310000000e00000041727469737420417274697374" +
-            "5452434b00000004000000312f31434f4d4d0000001b00000000000000436f6e76657274656420666f72204661" +
-            "626120426f78544954320000000a0000004b303031364350303" + "3"
-    )
-    private val id3v1 = hex(
-        "5441474b3030313643503033000000000000000000000000000000000000000000417274697374204172746973" +
-            "740000000000000000000000000000000000416c62756d20416c62756d00000000000000000000000000000000" +
-            "00000000000000436f6e76657274656420666f72204661626120426f780000000000000001ff"
-    )
+    private val redeleHeader = hex("49443304000000001c44" + "54495432000000 0b0000034b3130303043503031 00".replace(" ", ""))
 
     @Test
-    fun tagsAreIdenticalToMyfabaHacks() {
-        val title = Id3.fabaTitle("0016", 3)
-        val tag = Id3.v2Tag(title, 36675)
-        assertEquals(189, tag.size)
-        assertArrayEquals(hex("49443303000000000133"), tag.copyOfRange(0, 10))
-        assertArrayEquals(id3v2Frames, tag.copyOfRange(10, 10 + id3v2Frames.size))
-        assertTrue(tag.copyOfRange(10 + id3v2Frames.size, tag.size).all { it.toInt() == 0 })
-        assertArrayEquals(id3v1, Id3.v1Tag(title))
-        // Padding di id3lib: tag + audio arrotondati al multiplo di 2048 successivo
-        assertEquals(910 + 10, Id3.v2Tag(title, 240744).size)
-        assertEquals(1432 + 10, Id3.v2Tag(title, 2400862).size)
-        // Se tag + audio è già multiplo di 2048, id3lib aggiunge altri 2048 byte
-        assertEquals(2175, Id3.v2Tag(title, 2048L * 10 - 127).size)
+    fun tagIsIdenticalToRedele() {
+        val tag = Id3.v2Tag(Id3.fabaTitle("1000", 1), 2607096)
+        assertEquals(3662, tag.size)
+        assertArrayEquals(redeleHeader, tag.copyOfRange(0, redeleHeader.size))
+        assertTrue(tag.copyOfRange(redeleHeader.size, tag.size).all { it.toInt() == 0 })
+        // Padding di mutagen: 1024 + audio/1000
+        assertEquals(10 + 21 + 1024 + 10020, Id3.v2Tag("K1000CP04", 10020570).size)
     }
 
     /**
+     * Prova completa con una cartella creata da redele.py e provata sul box: MYFABA_DIR deve
+     * contenere in_k1000/ (gli MP3 di partenza) e out_k1000/K1000/ (i .MKI). Ogni .MKI rifatto
+     * da Cubetto con lo stesso MP3 deve essere identico byte per byte. I file non sono nel repository.
+     */
+    @Test
+    fun sameBytesAsRedeleOnRealFiles() {
+        val dir = System.getenv("MYFABA_DIR")?.let(::File)
+        assumeTrue("MYFABA_DIR non impostata", dir != null && dir.isDirectory)
+        val outDir = File(dir, "out_k1000/K1000")
+        val inputs = File(dir, "in_k1000").listFiles { f -> f.extension.equals("mp3", true) }!!.toList()
+        val byAudio = inputs.associateBy { audioOf(it.readBytes(), Id3.audioRange(it)) }
+        val outs = outDir.listFiles { f -> f.name.matches(Regex("""CP\d{2}\.MKI""")) }!!.sortedBy { it.name }
+        assumeTrue(outs.isNotEmpty())
+        for (mki in outs) {
+            val expected = mki.readBytes()
+            val plain = expected.copyOf().also { FabaCipher.decrypt(it) }
+            val decrypted = mki.writePlainTo(plain)
+            val source = byAudio[audioOf(plain, Id3.audioRange(decrypted))]
+            assertTrue("${mki.name}: MP3 di partenza non trovato", source != null)
+            val track = mki.name.substring(2, 4).toInt()
+            val out = ByteArrayOutputStream()
+            Id3.writeFaba(source!!, "1000", track, out)
+            assertEquals("${mki.name}: dimensione", expected.size.toLong(), Id3.encodedSize(source, "1000", track))
+            assertArrayEquals("${mki.name} rifatto da Cubetto", expected, out.toByteArray())
+        }
+    }
+
+    private fun audioOf(bytes: ByteArray, range: LongRange) = bytes.copyOfRange(range.first.toInt(), range.last.toInt() + 1).contentHashCode()
+
+    /**
      * Prova completa sui file veri del box: ogni originale, decifrato e riscritto da Cubetto,
-     * deve avere lo stesso audio byte per byte e i tag di myfaba-hacks. Gira solo se
+     * deve avere lo stesso audio byte per byte e il tag di redele.py. Gira solo se
      * FABA_ORIGINAL_DIR punta a una cartella Kxxxx copiata dal box (non sono nel repository).
      */
     @Test
@@ -73,8 +87,7 @@ class OriginalFormatTest {
             val audio = plain.copyOfRange(4096, plain.size)
             val tag = Id3.v2Tag(title, audio.size.toLong())
             assertArrayEquals("${original.name}: tag", tag, rebuilt.copyOfRange(0, tag.size))
-            assertArrayEquals("${original.name}: audio", audio, rebuilt.copyOfRange(tag.size, rebuilt.size - 128))
-            assertArrayEquals(Id3.v1Tag(title), rebuilt.copyOfRange(rebuilt.size - 128, rebuilt.size))
+            assertArrayEquals("${original.name}: audio", audio, rebuilt.copyOfRange(tag.size, rebuilt.size))
         }
     }
 
@@ -117,42 +130,15 @@ class OriginalFormatTest {
         assertFalse(Mp3Frames.isFabaCompatible(mp3(7, 7, 7, 7, mode = Mp3Frames.MODE_MONO)))
     }
 
-    /** Frame Info come lo scrive ffmpeg: modalità stereo, bit "original" spento, tag LAME con CRC. */
-    private fun ffmpegInfoFrame(): ByteArray {
-        val f = frame(7, mode = 0)
-        f[3] = 0 // ffmpeg: stereo, niente bit original
-        "Info".toByteArray().copyInto(f, 36)
-        "Lavc61.3.".toByteArray().copyInto(f, 156)
-        val crc = crc16(f, 190)
-        f[190] = (crc ushr 8).toByte(); f[191] = crc.toByte()
-        return f
-    }
-
-    private fun crc16(b: ByteArray, len: Int): Int {
-        var crc = 0
-        for (i in 0 until len) {
-            crc = crc xor (b[i].toInt() and 0xFF)
-            repeat(8) { crc = if (crc and 1 != 0) (crc ushr 1) xor 0xA001 else crc ushr 1 }
-        }
-        return crc
-    }
-
     @Test
-    fun infoFrameGetsTheAudioChannelModeLikeLame() {
-        val audio = ffmpegInfoFrame() + frame(7) + frame(7)
-        val source = File.createTempFile("info", ".mp3").apply { writeBytes(audio); deleteOnExit() }
+    fun audioIsCopiedUntouched() {
+        // Come redele.py: nemmeno il frame Info di ffmpeg ("stereo" con audio joint stereo) si tocca
+        val audio = frame(7, mode = 0).also { "Info".toByteArray().copyInto(it, 36) } + frame(7) + frame(7)
+        val source = File.createTempFile("info", ".mp3").apply { writeBytes(Id3.v2Tag("vecchio", 0) + audio); deleteOnExit() }
         val out = ByteArrayOutputStream()
         Id3.writeFaba(source, "0016", 1, out)
         val plain = out.toByteArray().also { FabaCipher.decrypt(it) }
-        val start = Id3.v2Tag("K0016CP01", audio.size.toLong()).size
-        val info = plain.copyOfRange(start, start + 313)
-        // Intestazione come negli originali FABA™ (joint stereo M/S, bit original), CRC del tag LAME valido
-        assertArrayEquals(hex("fffb7064"), info.copyOfRange(0, 4))
-        assertEquals(crc16(info, 190), ((info[190].toInt() and 0xFF) shl 8) or (info[191].toInt() and 0xFF))
-        // Il resto del frame Info e l'audio sono identici
-        assertArrayEquals(audio.copyOfRange(4, 190), info.copyOfRange(4, 190))
-        assertArrayEquals(audio.copyOfRange(313, audio.size), plain.copyOfRange(start + 313, start + audio.size))
-        assertEquals(plain.size.toLong(), Id3.encodedSize(source, "0016", 1))
+        assertArrayEquals(Id3.v2Tag("K0016CP01", audio.size.toLong()) + audio, plain)
     }
 
     @Test
