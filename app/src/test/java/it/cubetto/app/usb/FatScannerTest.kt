@@ -58,9 +58,11 @@ class FatScannerTest {
         val fs = Fat32FileSystem.read(disk)!!
         val mki = fs.rootDirectory.createDirectory("MKI01").also(FatShortNames::fix)
         mki.createDirectory("K0201").createFile("CP01.MKI") // nomi corti generati, come prima della correzione
+        mki.createDirectory("Copia di backup") // cartella creata dal PC con nome lungo: non è una statuina
         val scanner = FatScanner(disk)
         val found = mutableListOf<FatScanner.Folder>()
         scanner.scan(scanner.mkiEntry("MKI01")!!, Regex("""K\d{4}"""), { false }, {}) { found += it }
+        // Solo la statuina va riparata: la cartella del PC non deve far rileggere tutto ogni volta
         assertTrue(found.single().needsRepair)
 
         // Un box senza MKI01 corretto non si legge così: si torna a libaums

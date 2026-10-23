@@ -7,7 +7,7 @@
 **Statuine personalizzate per il FABA™ di prima generazione, a partire da YouTube o dai tuoi file audio.**
 
 ![Stato](https://img.shields.io/badge/stato-sperimentale-orange?style=for-the-badge)
-![Versione](https://img.shields.io/badge/versione-0.2.5-E3262B?style=for-the-badge)
+![Versione](https://img.shields.io/badge/versione-0.2.6-E3262B?style=for-the-badge)
 ![Licenza](https://img.shields.io/badge/licenza-GPL--3.0-blue?style=for-the-badge)
 
 ![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)

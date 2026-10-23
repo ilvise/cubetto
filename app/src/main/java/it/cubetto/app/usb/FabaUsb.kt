@@ -267,7 +267,8 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
 
     /**
      * Lettura diretta del FAT32 con [FatScanner]. False se serve la lettura con libaums:
-     * niente MKI01 con il nome giusto, o cartelle scritte da vecchie versioni da riparare.
+     * niente MKI01 con il nome giusto. Le cartelle scritte da vecchie versioni si riparano
+     * alla fine con libaums, senza ricominciare la lettura da capo.
      */
     private fun fastScanLocked(start: BoxInfo): Boolean {
         val scanner = FatScanner(partition ?: return false)
@@ -275,25 +276,31 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
         if (mki.lfn) return false
         var info = start
         val found = mutableListOf<BoxFigure>()
-        var repair = false
-        scanner.scan(mki, FIGURE_DIR, cancelled = { detached || repair }, onTotal = { total ->
+        var toRepair = 0
+        scanner.scan(mki, FIGURE_DIR, cancelled = { detached }, onTotal = { total ->
             info = info.copy(total = total)
             _state.value = BoxState.Connected(info)
         }) { folder ->
-            if (folder.needsRepair) {
-                repair = true
-                return@scan
-            }
-            if (folder.bytes > PLACEHOLDER_MAX_BYTES) {
+            if (folder.needsRepair) toRepair++
+            else if (folder.bytes > PLACEHOLDER_MAX_BYTES) {
                 found += BoxFigure(folder.name.substring(1), folder.files, folder.bytes)
                 found.sortBy { it.id }
             }
             info = info.copy(figures = found.toList(), scanned = info.scanned + 1)
             _state.value = BoxState.Connected(info)
         }
-        if (repair || detached) return detached
-        _state.value = BoxState.Connected(info.copy(scanning = false))
+        if (detached) return true
+        if (toRepair > 0) repairLocked(found)
+        _state.value = BoxState.Connected(info.copy(figures = found.sortedBy { it.id }, scanning = false))
         return true
+    }
+
+    /** Ripara con libaums le statuine che la lettura veloce ha saltato e le aggiunge a [found]. */
+    private fun repairLocked(found: MutableList<BoxFigure>) {
+        val mki = fs?.rootDirectory?.search(MKI_DIR) ?: return
+        val known = found.map { it.id }.toSet()
+        mki.listFiles().filter { it.isDirectory && FIGURE_DIR.matches(it.name) && it.name.substring(1) !in known }
+            .forEach { dir -> if (!detached) figureOf(dir)?.let { found += it } }
     }
 
     /** Lettura con libaums, cartella per cartella: più lenta, ma ripara i nomi corti sbagliati. */

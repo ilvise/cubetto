@@ -104,9 +104,10 @@ internal class FatScanner(private val disk: BlockDeviceDriver) {
      * [onTotal] riceve subito quante sono, [onFolder] ogni cartella appena letta.
      */
     fun scan(mki: Entry, filter: Regex, cancelled: () -> Boolean, onTotal: (Int) -> Unit, onFolder: (Folder) -> Unit) {
-        // Anche le cartelle con nomi scritti da vecchie versioni: vanno segnalate per la riparazione
+        // Anche le statuine scritte da vecchie versioni, con nome corto generato ("K00000~0"):
+        // vanno segnalate per la riparazione. Le altre cartelle (es. create dal PC) si ignorano.
         val dirs = readDirectory(mki.cluster)
-            .filter { it.isDirectory && isData(it.cluster) && (filter.matches(it.name) || it.lfn || it.generated) }
+            .filter { it.isDirectory && isData(it.cluster) && (filter.matches(it.name) || (it.generated && it.name.startsWith("K"))) }
             .sortedBy { it.cluster }
         onTotal(dirs.size)
         var i = 0
