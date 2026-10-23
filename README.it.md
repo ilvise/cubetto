@@ -9,8 +9,8 @@
 
 **Statuine personalizzate per il FABA™ di prima generazione, a partire da YouTube o dai tuoi file audio.**
 
-![Stato](https://img.shields.io/badge/stato-sperimentale-orange?style=for-the-badge)
-![Versione](https://img.shields.io/badge/versione-1.0.0-E3262B?style=for-the-badge)
+![Stato](https://img.shields.io/badge/stato-beta-blueviolet?style=for-the-badge)
+![Versione](https://img.shields.io/badge/versione-1.0.1-E3262B?style=for-the-badge)
 ![Licenza](https://img.shields.io/badge/licenza-GPL--3.0-blue?style=for-the-badge)
 
 ![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
@@ -25,7 +25,7 @@
 </div>
 
 > [!WARNING]
-> **Progetto sperimentale.** Il formato dei file è identico a quello di myfaba-hacks ed è stato provato su un
+> **Versione beta.** Il formato dei file è identico a quello di myfaba-hacks ed è stato provato su un
 > FABA™ di prima generazione, ma non su tutti i box. Prima di copiare, l'app fa il backup delle cartelle che
 > sovrascrive, ma la usi a tuo rischio.
 
