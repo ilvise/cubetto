@@ -48,7 +48,7 @@ class OriginalFormatTest {
         assumeTrue(outs.isNotEmpty())
         for (mki in outs) {
             val expected = mki.readBytes()
-            val plain = expected.copyOf().also { FabaCipher.decrypt(it) }
+            val plain = expected.copyOf().also { TestDecipher.decrypt(it) }
             val decrypted = mki.writePlainTo(plain)
             val source = byAudio[audioOf(plain, Id3.audioRange(decrypted))]
             assertTrue("${mki.name}: MP3 di partenza non trovato", source != null)
@@ -75,13 +75,13 @@ class OriginalFormatTest {
         val files = dir.listFiles { f -> f.name.matches(Regex("""CP\d{2}\.MKI""")) }!!.sortedBy { it.name }
         assumeTrue(files.isNotEmpty())
         for (original in files) {
-            val plain = original.readBytes().also { FabaCipher.decrypt(it) }
+            val plain = original.readBytes().also { TestDecipher.decrypt(it) }
             val source = original.writePlainTo(plain)
             assertTrue("${original.name}: formato originale", Mp3Frames.isFabaCompatible(source))
             val track = original.name.substring(2, 4).toInt()
             val out = ByteArrayOutputStream()
             Id3.writeFaba(source, figureId, track, out)
-            val rebuilt = out.toByteArray().also { FabaCipher.decrypt(it) }
+            val rebuilt = out.toByteArray().also { TestDecipher.decrypt(it) }
             assertEquals(Id3.encodedSize(source, figureId, track), rebuilt.size.toLong())
             val title = Id3.fabaTitle(figureId, track)
             val audio = plain.copyOfRange(4096, plain.size)
@@ -137,7 +137,7 @@ class OriginalFormatTest {
         val source = File.createTempFile("info", ".mp3").apply { writeBytes(Id3.v2Tag("vecchio", 0) + audio); deleteOnExit() }
         val out = ByteArrayOutputStream()
         Id3.writeFaba(source, "0016", 1, out)
-        val plain = out.toByteArray().also { FabaCipher.decrypt(it) }
+        val plain = out.toByteArray().also { TestDecipher.decrypt(it) }
         assertArrayEquals(Id3.v2Tag("K0016CP01", audio.size.toLong()) + audio, plain)
     }
 

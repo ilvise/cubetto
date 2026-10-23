@@ -38,7 +38,7 @@ class FabaCoreTest {
         val actual = data.copyOf()
         FabaCipher.encrypt(actual)
         assertArrayEquals(expected, actual)
-        FabaCipher.decrypt(actual)
+        TestDecipher.decrypt(actual)
         assertArrayEquals(data, actual)
     }
 
@@ -62,7 +62,7 @@ class FabaCoreTest {
 
         val out = ByteArrayOutputStream()
         Id3.writeFaba(src, "1032", 7, out)
-        val plain = out.toByteArray().also { FabaCipher.decrypt(it) }
+        val plain = out.toByteArray().also { TestDecipher.decrypt(it) }
         val title = "K1032CP07"
         assertArrayEquals(Id3.v2Tag(title, audio.size.toLong()) + audio, plain)
         assertEquals(plain.size.toLong(), Id3.encodedSize(src, "1032", 7))

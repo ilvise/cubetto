@@ -1,6 +1,6 @@
 package it.cubetto.app.usb
 
-import it.cubetto.app.faba.FabaCipher
+import it.cubetto.app.faba.TestDecipher
 import it.cubetto.app.faba.Id3
 import me.jahnen.libaums.core.fs.UsbFile
 import me.jahnen.libaums.core.fs.UsbFileOutputStream
@@ -77,7 +77,7 @@ class FigureWriterTest {
             val bytes = UsbFileStreamFactory.createBufferedInputStream(f, again).use { it.readBytes() }
             val expected = java.io.ByteArrayOutputStream().also { Id3.writeFaba(src, "1000", i + 1, it) }.toByteArray()
             assertArrayEquals(expected, bytes)
-            assertEquals(Id3.fabaTitle("1000", i + 1), String(bytes.copyOf().also { FabaCipher.decrypt(it) }, 21, 9, Charsets.UTF_8))
+            assertEquals(Id3.fabaTitle("1000", i + 1), String(bytes.copyOf().also { TestDecipher.decrypt(it) }, 21, 9, Charsets.UTF_8))
         }
         val scanner = FatScanner(disk)
         val folder = mutableListOf<FatScanner.Folder>()

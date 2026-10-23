@@ -1,113 +1,149 @@
 <div align="center">
 
-<img src="docs/img/icon.svg" width="120" alt="Icona di Cubetto">
+[![English](https://img.shields.io/badge/🇬🇧-English-012169?style=for-the-badge)](README.md)
+[![Italiano](https://img.shields.io/badge/🇮🇹-Italiano-lightgrey?style=for-the-badge)](README.it.md)
+
+<img src="docs/img/icon.svg" width="120" alt="Cubetto icon">
 
 # Cubetto
 
-**Statuine personalizzate per il FABA™ di prima generazione, a partire da YouTube o dai tuoi file audio.**
+**Custom figures for the first-generation FABA™, made from YouTube or your own audio files.**
 
-![Stato](https://img.shields.io/badge/stato-sperimentale-orange?style=for-the-badge)
-![Versione](https://img.shields.io/badge/versione-1.0.0-E3262B?style=for-the-badge)
-![Licenza](https://img.shields.io/badge/licenza-GPL--3.0-blue?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-experimental-orange?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.0.0-E3262B?style=for-the-badge)
+![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=for-the-badge)
 
 ![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat-square&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)
-![yt-dlp](https://img.shields.io/badge/yt--dlp-integrato-FF0000?style=flat-square&logo=youtube&logoColor=white)
+![yt-dlp](https://img.shields.io/badge/yt--dlp-built--in-FF0000?style=flat-square&logo=youtube&logoColor=white)
 ![ABI](https://img.shields.io/badge/ABI-arm64--v8a-555555?style=flat-square)
-![FABA](https://img.shields.io/badge/FABA™-1ª%20generazione-FFD43B?style=flat-square)
+![FABA](https://img.shields.io/badge/FABA™-1st%20generation-FFD43B?style=flat-square)
+
+🌍 **App available in:** English · italiano · español · català · français · Nederlands
 
 </div>
 
 > [!WARNING]
-> **Progetto sperimentale.** Il formato dei file è identico a quello di myfaba-hacks, ma la copia dall'app
-> sul box non è ancora verificata su tutti i box. Prima di copiare, l'app fa il backup delle cartelle che
-> sovrascrive, ma la usi a tuo rischio.
+> **Experimental project.** The file format is identical to myfaba-hacks and has been tested on a first-generation
+> FABA™, but not on every box. Before copying, the app backs up the folders it overwrites, but use it at your own risk.
 
-**Il flusso:** link o file → MP3 → playlist → formato FABA™ con l'ID scelto → copia via USB sul box → scrittura del tag NFC.
+## 🙏 Acknowledgements
 
-## 📑 Indice
+Cubetto is built on the work of the original **[myfaba-hacks](https://github.com/wansors/myfaba-hacks)** project by
+[wansors](https://github.com/wansors) and its contributors: the MKI file cipher, the NFC tag format and the figure ID
+registry all come from there. Cubetto brings what `redele.py` does for the first-generation FABA™ into an Android app.
+Thank you!
 
-- [📱 Schermate](#-schermate)
-- [✨ Funzioni](#-funzioni)
-- [🎧 Formato dei brani](#-formato-dei-brani)
-- [🧰 Requisiti](#-requisiti)
+**How it works:** link or file → MP3 → playlist → FABA™ format with the chosen ID → USB copy to the box → NFC tag writing.
+
+## 📑 Contents
+
+- [🛡️ No piracy](#️-no-piracy)
+- [📱 Screens](#-screens)
+- [✨ Features](#-features)
+- [🏷️ NFC tags and DIY figures](#️-nfc-tags-and-diy-figures)
+- [🎧 Track format](#-track-format)
+- [🧰 Requirements](#-requirements)
 - [🛠️ Build](#️-build)
-- [🗂️ Struttura del progetto](#️-struttura-del-progetto)
-- [⚖️ Marchi e avvertenze](#️-marchi-e-avvertenze)
-- [📄 Licenza](#-licenza)
+- [🗂️ Project structure](#️-project-structure)
+- [⚖️ Trademarks and disclaimer](#️-trademarks-and-disclaimer)
+- [📄 License](#-license)
 
-## 📱 Schermate
+## 🛡️ No piracy
+
+> [!IMPORTANT]
+> **Cubetto does not decrypt FABA™ files, on purpose.** The app can only *write* your own tracks in the box format:
+> it never reads, converts or exports the audio of original figures, so that it cannot be used for piracy.
+>
+> The developer does not support any form of piracy of original FABA™ content. Original figures and stories have a
+> quality (voices, music, illustrations, editorial care) that cannot be compared with what you can make with Cubetto.
+> **Cubetto is only a tool to add what original figures cannot offer**, such as your family's favourite songs or a
+> grandparent's recordings: it does not replace them. If you love the FABA™, support its makers by buying original figures.
+
+## 📱 Screens
 
 <table>
   <tr>
-    <td align="center"><img src="docs/img/screenshots/libreria.png" width="240" alt="Libreria"><br><b>Libreria</b></td>
-    <td align="center"><img src="docs/img/screenshots/statuina.png" width="240" alt="Dettaglio statuina"><br><b>Statuina</b></td>
-    <td align="center"><img src="docs/img/screenshots/aggiungi.png" width="240" alt="Aggiungi brani"><br><b>Aggiungi brani</b></td>
+    <td align="center"><img src="docs/img/screenshots/libreria.png" width="240" alt="Library"><br><b>Library</b></td>
+    <td align="center"><img src="docs/img/screenshots/statuina.png" width="240" alt="Figure details"><br><b>Figure</b></td>
+    <td align="center"><img src="docs/img/screenshots/aggiungi.png" width="240" alt="Add tracks"><br><b>Add tracks</b></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/img/screenshots/scegli-id.png" width="240" alt="Scegli un ID"><br><b>Scegli un ID</b></td>
-    <td align="center"><img src="docs/img/screenshots/box.png" width="240" alt="Box USB"><br><b>Box USB</b></td>
-    <td align="center"><img src="docs/img/screenshots/nfc.png" width="240" alt="Scrivi il tag NFC"><br><b>Tag NFC</b></td>
+    <td align="center"><img src="docs/img/screenshots/scegli-id.png" width="240" alt="Choose an ID"><br><b>Choose an ID</b></td>
+    <td align="center"><img src="docs/img/screenshots/box.png" width="240" alt="USB box"><br><b>USB box</b></td>
+    <td align="center"><img src="docs/img/screenshots/nfc.png" width="240" alt="Write the NFC tag"><br><b>NFC tag</b></td>
   </tr>
 </table>
 
-<sub>Immagini dai mockup in <code>docs/mockup/</code>: l'app vera può differire nei dettagli.</sub>
+<sub>Images from the Italian mockups in <code>docs/mockup/</code>: the real app may differ in the details.</sub>
 
-## ✨ Funzioni
+## ✨ Features
 
-### 🎵 Brani
-- **Da YouTube**: incolla un link oppure usa *Condividi* dall'app YouTube. Le playlist diventano più brani.
-- **Dal dispositivo**: MP3, M4A, OPUS, WAV e anche video, di cui si prende solo l'audio.
-- **Opzioni**: volume uniformato (`loudnorm`), taglio dei silenzi, divisione per capitoli, SponsorBlock, mono.
-- **Download in background** con notifica.
-- **yt-dlp sempre aggiornato**: viene scaricato dalle release GitHub tramite
+### 🎵 Tracks
+- **From YouTube**: paste a link or use *Share* from the YouTube app. Playlists become several tracks.
+- **From the device**: MP3, M4A, OPUS, WAV and even videos, of which only the audio is used.
+- **Options**: volume levelling (`loudnorm`), silence trimming, split by chapters, SponsorBlock, mono.
+- **Background downloads** with a notification.
+- **Always up-to-date yt-dlp**: downloaded from the GitHub releases through
   [youtubedl-android](https://github.com/JunkFood02/youtubedl-android).
-  - Il controllo avviene al massimo una volta al giorno, e scarica solo se c'è una versione nuova.
-  - Si può forzare da *Impostazioni → Controlla ora*.
+  - It checks at most once a day, and downloads only when there is a new version.
+  - You can force it from *Settings → Check now*.
 
-### 🧸 Statuine
-- Nome, colore, foto e preferiti.
-- Brani riordinabili con il trascinamento e lettore audio integrato.
-- **Selettore ID** basato sul registro [`TAGS.md` di myfaba-hacks](https://github.com/wansors/myfaba-hacks/blob/main/TAGS.md),
-  incluso nell'app e aggiornabile da GitHub.
-  - **Consigliati**: gli ID di statuine vendute in lingue *diverse* da quella dell'app, più gli ID liberi.
-  - La scelta resta sempre libera.
-  - L'app avvisa se l'ID copre una statuina della tua lingua o un'altra tua statuina.
-- **Export/import** in JSON: contiene solo i link, l'audio si riscarica.
+### 🧸 Figures
+- Name, colour, photo and favourites.
+- Tracks reordered by drag and drop, with a built-in audio player.
+- **ID picker** based on the [myfaba-hacks `TAGS.md` registry](https://github.com/wansors/myfaba-hacks/blob/main/TAGS.md),
+  bundled with the app and updatable from GitHub.
+  - **Suggested**: IDs of figures sold in languages *other* than the app's, plus unused IDs.
+  - You can always choose freely.
+  - The app warns you when an ID belongs to a figure in your language or to another of your figures.
+- **Export/import** as JSON: it holds only the links, the audio is downloaded again.
 
-### 🔌 Box via USB OTG
-- Accesso con [libaums](https://github.com/magnusja/libaums), senza root.
-- Collegando il box l'app si apre e copia da sola le statuine modificate.
-- Lettura veloce: le cartelle vengono lette direttamente dal FAT32 e compaiono man mano.
-- **Backup** della cartella prima di sovrascriverla, con ripristino.
-- Controlla lo spazio libero e il limite di 99 tracce, e copia solo i brani cambiati.
-- Espulsione sicura come dal computer: la cache del box viene scritta e il supporto espulso.
+### 🔌 Box over USB OTG
+- Access through [libaums](https://github.com/magnusja/libaums), no root needed.
+- When you plug in the box, the app opens and copies the changed figures by itself.
+- Fast reading: folders are read straight from the FAT32 file system and appear as they are found.
+- **Backup** of a folder before overwriting it, with restore.
+- Checks the free space and the 99-track limit, and copies only the changed tracks.
+- Safe eject like a computer does: the box flushes its cache and the medium is ejected.
 
 ### 📡 NFC
-- **Scrittura** del testo `02190530{ID}00` nella posizione esatta letta dal box (pagina 7 byte 2 → pagina 10 byte 3).
-  - Funziona su NTAG203/213/215/216, e il tag viene riletto per verifica.
-- **Lettura** di una statuina con il riconoscimento del suo ID, e copia su un tag vuoto.
-- Avviso per i chip clone non NXP (UID `1D…`/`FF…`).
+- **Writes** the text `02190530{ID}00` at the exact position read by the box (page 7 byte 2 → page 10 byte 3).
+  - Works on NTAG203/213/215/216, and the tag is read back to verify it.
+  - A **Help** box explains which tags to buy and how to build a figure.
+- **Reads** a figure and recognises its ID, and copies it to a blank tag.
+- Warns about non-NXP clone chips (UID `1D…`/`FF…`).
 
-### 🌍 Lingue
-Italiano, spagnolo, catalano, francese, olandese (i paesi del registro FABA™) e inglese. La lingua si sceglie per app.
+## 🏷️ NFC tags and DIY figures
 
-## 🎧 Formato dei brani
+**Recommended tags:** genuine NXP NTAG213 or NTAG215. Many cheap clones are not read by the FABA™
+(see [FAQ_TAGS.md](https://github.com/wansors/myfaba-hacks/blob/main/FAQ_TAGS.md)). These work:
 
-| Passaggio | Dettaglio |
+- [Amazon IT](https://www.amazon.it/dp/B07Q7FZDSC)
+- [Amazon ES](https://www.amazon.es/dp/B07Q7FZDSC)
+- [Amazon DE](https://www.amazon.de/gp/product/B07Q43PXMR/)
+
+**DIY figures:** just cut out a piece of cardboard and glue the tag underneath, or 3D-print a base:
+
+- [Base template for FABA™ figures](https://www.printables.com/model/1378409-base-template-for-faba-audioplayer-figurines/files)
+- [FABA™ disc with photo frame](https://www.printables.com/model/1876485-faba-disc-with-photoframe/comments/3668118)
+
+## 🎧 Track format
+
+| Step | Details |
 |---|---|
-| 🎚️ Conversione | Ogni sorgente passa per **lo stesso comando ffmpeg**: prima traccia audio, filtri, MP3 CBR joint stereo 44,1 kHz (96 kbps, 128 kbps senza mono) |
-| 🏷️ Tag | Identici byte per byte a `redele.py` di myfaba-hacks: ID3v2.4 con il solo titolo `K{ID}CP{NN}` (UTF-8) e il padding di mutagen |
-| 🎼 Audio | Copiato così com'è dopo la conversione, senza altre modifiche |
-| 🔐 Cifratura | Rotazione di 3 bit e XOR con la chiave `30 05 19 20` |
-| 📁 Percorso | `MKI01/K{ID}/CPnn.MKI`, con veri nomi 8.3 |
+| 🎚️ Conversion | Every source goes through **the same ffmpeg command**: first audio track, filters, CBR joint-stereo MP3 at 44.1 kHz (96 kbps, 128 kbps without mono) |
+| 🏷️ Tags | Byte-for-byte identical to myfaba-hacks' `redele.py`: ID3v2.4 with only the `K{ID}CP{NN}` title (UTF-8) and mutagen's padding |
+| 🎼 Audio | Copied as is after conversion, with no other changes |
+| 🔐 Cipher | 3-bit rotation and XOR with the key `30 05 19 20` |
+| 📁 Path | `MKI01/K{ID}/CPnn.MKI`, with real 8.3 names and the ARCHIVE attribute, like a copy from a PC |
 
-## 🧰 Requisiti
+## 🧰 Requirements
 
-- 📱 Android 8.0+ (API 26), solo **arm64-v8a**.
-- 🔌 Un cavo o adattatore **USB OTG**: il FABA™ di prima generazione si presenta come una chiavetta USB.
-- 🏷️ Tag **NTAG213/NTAG215** originali NXP (vedi [FAQ_TAGS.md](https://github.com/wansors/myfaba-hacks/blob/main/FAQ_TAGS.md)).
+- 📱 Android 8.0+ (API 26), **arm64-v8a** only.
+- 🔌 A **USB OTG** cable or adapter: the first-generation FABA™ shows up as a USB stick.
+- 🏷️ Genuine NXP **NTAG213/NTAG215** tags (see [above](#️-nfc-tags-and-diy-figures)).
 
 ## 🛠️ Build
 
@@ -116,36 +152,36 @@ Italiano, spagnolo, catalano, francese, olandese (i paesi del registro FABA™) 
 # APK: app/build/outputs/apk/debug/app-debug.apk
 ```
 
-- **Release firmata**: `./gradlew assembleRelease` firma l'APK con la chiave indicata in
-  `~/.cubetto-signing/keystore.properties` (o nel file della variabile `CUBETTO_KEYSTORE`), con
-  `storeFile`, `storePassword`, `keyAlias` e `keyPassword`. Senza quel file l'APK di release non è firmato.
-- Le traduzioni si modificano in `tools/strings.py`, poi si rigenerano con `python3 tools/strings.py`.
-- Per confrontare i brani con quelli originali del box:
-  `FABA_ORIGINAL_DIR=/percorso/K0016 ./gradlew testDebugUnitTest`.
-- Per confrontarli con una cartella creata da `redele.py` (`in_k1000/` con gli MP3, `out_k1000/K1000/` con i .MKI):
-  `MYFABA_DIR=/percorso ./gradlew testDebugUnitTest`.
+- **Signed release**: `./gradlew assembleRelease` signs the APK with the key set in
+  `~/.cubetto-signing/keystore.properties` (or in the file named by the `CUBETTO_KEYSTORE` variable), with
+  `storeFile`, `storePassword`, `keyAlias` and `keyPassword`. Without that file the release APK is unsigned.
+- Translations are edited in `tools/strings.py`, then regenerated with `python3 tools/strings.py`.
+- To compare tracks with the original ones from the box:
+  `FABA_ORIGINAL_DIR=/path/K0016 ./gradlew testDebugUnitTest`.
+- To compare them with a folder made by `redele.py` (`in_k1000/` with the MP3s, `out_k1000/K1000/` with the .MKI files):
+  `MYFABA_DIR=/path ./gradlew testDebugUnitTest`.
 
-## 🗂️ Struttura del progetto
+## 🗂️ Project structure
 
-| Percorso | Contenuto |
+| Path | Contents |
 |---|---|
-| `faba/` | cifratura MKI, tag ID3, frame MP3, layout del tag NFC, registro ID e suggerimenti |
-| `ytdlp/` | yt-dlp, conversione ffmpeg, worker dei download |
-| `usb/` | accesso al box, lettura FAT32, sync differenziale, backup e ripristino |
-| `nfc/` | lettura e scrittura dei tag in reader mode |
-| `playback/` | lettore audio (Media3) |
-| `data/` | database Room e impostazioni |
-| `ui/` | schermate Compose (Libreria, Statuina, Aggiungi, Crea/Scegli ID, Box, Impostazioni) |
+| `faba/` | MKI cipher, ID3 tags, MP3 frames, NFC tag layout, ID registry and suggestions |
+| `ytdlp/` | yt-dlp, ffmpeg conversion, download worker |
+| `usb/` | box access, FAT32 reading, figure writing, backup, restore and eject |
+| `nfc/` | tag reading and writing in reader mode |
+| `playback/` | audio player (Media3) |
+| `data/` | Room database and settings |
+| `ui/` | Compose screens (Library, Figure, Add, Create/Choose ID, Box, Settings) |
 
-## ⚖️ Marchi e avvertenze
+## ⚖️ Trademarks and disclaimer
 
-- FABA™ e myFABA™ sono marchi dei rispettivi titolari (FABA S.r.l.).
-- Cubetto è un progetto indipendente: non è affiliato, sponsorizzato né approvato da FABA S.r.l.
-- I nomi delle statuine sono citati solo per identificarne l'ID.
-- ⛔ Solo per il FABA™ di prima generazione (offline). **Non supporta FABA+.**
-- Usa Cubetto solo con contenuti che hai il diritto di scaricare e ascoltare.
+- FABA™ and myFABA™ are trademarks of their respective owners (FABA S.r.l.).
+- Cubetto is an independent project: it is not affiliated with, sponsored or endorsed by FABA S.r.l.
+- Figure names are mentioned only to identify their ID.
+- ⛔ First-generation (offline) FABA™ only. **FABA+ is not supported.**
+- Use Cubetto only with content you have the right to download and listen to.
 
-## 📄 Licenza
+## 📄 License
 
-GPL-3.0, come [myfaba-hacks](https://github.com/wansors/myfaba-hacks), da cui deriva l'algoritmo di cifratura,
-e come youtubedl-android. Font Fredoka e Nunito sotto SIL Open Font License.
+GPL-3.0, like [myfaba-hacks](https://github.com/wansors/myfaba-hacks), from which the cipher algorithm comes,
+and like youtubedl-android. Fredoka and Nunito fonts under the SIL Open Font License.

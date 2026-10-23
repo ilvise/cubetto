@@ -7,6 +7,9 @@ import java.io.OutputStream
  * Ogni byte viene ruotato a sinistra di 3 bit e poi messo in XOR con una chiave
  * di 4 byte che dipende dalla posizione (pos % 4).
  * Port di redele.py / MKICipher.java da github.com/wansors/myfaba-hacks (GPL-3.0).
+ *
+ * Solo cifratura, di proposito: l'app non decifra mai i file del box, per non poter essere
+ * usata per copiare l'audio delle statuine originali. La decifratura esiste solo nei test.
  */
 object FabaCipher {
     private val KEY = intArrayOf(0x30, 0x05, 0x19, 0x20)
@@ -14,14 +17,10 @@ object FabaCipher {
     private val ENCRYPT: Array<ByteArray> = Array(4) { k ->
         ByteArray(256) { b -> ((((b shl 3) or (b ushr 5)) and 0xFF) xor KEY[k]).toByte() }
     }
-    private val DECRYPT: Array<ByteArray> = Array(4) { k ->
-        ByteArray(256).also { inv -> for (b in 0 until 256) inv[ENCRYPT[k][b].toInt() and 0xFF] = b.toByte() }
-    }
 
     fun encrypt(buf: ByteArray, len: Int = buf.size, startPos: Long = 0) = transform(buf, len, startPos, ENCRYPT)
-    fun decrypt(buf: ByteArray, len: Int = buf.size, startPos: Long = 0) = transform(buf, len, startPos, DECRYPT)
 
-    private fun transform(buf: ByteArray, len: Int, startPos: Long, tables: Array<ByteArray>) {
+    internal fun transform(buf: ByteArray, len: Int, startPos: Long, tables: Array<ByteArray>) {
         for (i in 0 until len) {
             val table = tables[((startPos + i) and 3).toInt()]
             buf[i] = table[buf[i].toInt() and 0xFF]
