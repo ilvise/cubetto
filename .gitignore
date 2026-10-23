@@ -8,6 +8,8 @@ captures/
 .kotlin/
 prova-box/
 K0*/
+# Cartella di prova con brani e copie dal box: mai nel repository
+/tmp/
 
 # File audio (copie dal box, download di prova): mai nel repository
 *.MKI
