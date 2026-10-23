@@ -2,10 +2,12 @@ package it.cubetto.app
 
 import android.Manifest
 import android.content.Intent
+import android.graphics.Color
 import android.hardware.usb.UsbManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -24,7 +26,14 @@ class MainActivity : AppCompatActivity() {
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        // L'app è sempre chiara: icone scure nelle barre anche con il telefono in tema scuro
+        // (con lo stile automatico diventavano bianche su bianco). Sotto la barra di stato un
+        // velo del colore di sfondo, così il contenuto che scorre non copre ora e icone.
+        val ground = getColor(R.color.ground)
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(ground and 0x00FFFFFF or (0xE6 shl 24), ground),
+            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) handle(intent)
         if (Build.VERSION.SDK_INT >= 33) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
