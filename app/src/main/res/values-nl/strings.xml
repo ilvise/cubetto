@@ -23,6 +23,7 @@
     <string name="reread">Opnieuw lezen</string>
     <string name="box_ejected">FABA™ uitgeworpen</string>
     <string name="box_ejected_hint">Je kunt hem nu veilig loskoppelen.</string>
+    <string name="box_replug">De FABA™ is uitgeworpen: koppel de kabel los en sluit hem opnieuw aan.</string>
     <string name="reconnect">Opnieuw verbinden</string>
     <string name="close">Sluiten</string>
     <string name="create_new_figure">Nieuw figuur maken</string>

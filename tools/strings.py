@@ -42,6 +42,7 @@ S = {
     "reread": ["Rileggi", "Read again", "Volver a leer", "Relire", "Opnieuw lezen", "Torna a llegir"],
     "box_ejected": ["FABA™ espulso", "FABA™ ejected", "FABA™ expulsada", "FABA™ éjectée", "FABA™ uitgeworpen", "FABA™ expulsada"],
     "box_ejected_hint": ["Ora puoi scollegarlo in sicurezza.", "You can now unplug it safely.", "Ya puedes desconectarla con seguridad.", "Vous pouvez la débrancher en toute sécurité.", "Je kunt hem nu veilig loskoppelen.", "Ja la pots desconnectar amb seguretat."],
+    "box_replug": ["Il FABA™ è stato espulso: scollega il cavo e ricollegalo.", "The FABA™ was ejected: unplug the cable and plug it in again.", "La FABA™ se ha expulsado: desconecta el cable y vuelve a conectarlo.", "La FABA™ a été éjectée : débranchez le câble puis rebranchez-le.", "De FABA™ is uitgeworpen: koppel de kabel los en sluit hem opnieuw aan.", "La FABA™ s'ha expulsat: desconnecta el cable i torna'l a connectar."],
     "reconnect": ["Ricollega", "Reconnect", "Reconectar", "Reconnecter", "Opnieuw verbinden", "Torna a connectar"],
     "close": ["Chiudi", "Close", "Cerrar", "Fermer", "Sluiten", "Tanca"],
     "create_new_figure": ["Crea una nuova statuina", "Create a new figure", "Crear una figura nueva", "Créer une nouvelle figurine", "Nieuw figuur maken", "Crea una figura nova"],

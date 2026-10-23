@@ -7,7 +7,7 @@
 **Statuine personalizzate per il FABA™ di prima generazione, a partire da YouTube o dai tuoi file audio.**
 
 ![Stato](https://img.shields.io/badge/stato-sperimentale-orange?style=for-the-badge)
-![Versione](https://img.shields.io/badge/versione-0.2.4-E3262B?style=for-the-badge)
+![Versione](https://img.shields.io/badge/versione-0.2.5-E3262B?style=for-the-badge)
 ![Licenza](https://img.shields.io/badge/licenza-GPL--3.0-blue?style=for-the-badge)
 
 ![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
@@ -82,7 +82,7 @@
 - Lettura veloce: le cartelle vengono lette direttamente dal FAT32 e compaiono man mano.
 - **Backup** della cartella prima di sovrascriverla, con ripristino.
 - Controlla lo spazio libero e il limite di 99 tracce, e copia solo i brani cambiati.
-- Espulsione sicura.
+- Espulsione sicura come dal computer: la cache del box viene scritta e il supporto espulso.
 
 ### 📡 NFC
 - **Scrittura** del testo `02190530{ID}00` nella posizione esatta letta dal box (pagina 7 byte 2 → pagina 10 byte 3).

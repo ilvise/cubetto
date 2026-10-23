@@ -24,6 +24,7 @@
     <string name="reread">Read again</string>
     <string name="box_ejected">FABA™ ejected</string>
     <string name="box_ejected_hint">You can now unplug it safely.</string>
+    <string name="box_replug">The FABA™ was ejected: unplug the cable and plug it in again.</string>
     <string name="reconnect">Reconnect</string>
     <string name="close">Close</string>
     <string name="create_new_figure">Create a new figure</string>

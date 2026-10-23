@@ -10,6 +10,7 @@ import android.hardware.usb.UsbManager
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
+import it.cubetto.app.R
 import it.cubetto.app.data.CubettoDao
 import it.cubetto.app.data.Playlist
 import it.cubetto.app.data.Track
@@ -175,6 +176,12 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
             detached = false
             try {
                 candidate.init()
+                // Dopo l'espulsione il supporto resta "tolto" finché non si stacca il cavo
+                if (candidate.partitions.isEmpty()) {
+                    runCatching { candidate.close() }
+                    _state.value = BoxState.Error(context.getString(R.string.box_replug))
+                    return false
+                }
                 device = candidate
                 val first = candidate.partitions.first()
                 partition = first
@@ -214,9 +221,13 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
         return false
     }
 
-    /** Espulsione sicura: aspetta la fine di copie e letture, poi chiude il dispositivo. */
+    /**
+     * Espulsione sicura: aspetta la fine di copie e letture, fa scrivere al box la sua cache,
+     * lo espelle come fa un computer e solo dopo chiude il dispositivo.
+     */
     suspend fun eject() = withContext(Dispatchers.IO) {
         mutex.withLock {
+            partition?.let { p -> runCatching { ScsiEject.eject(p) }.onFailure { Log.w(TAG, "eject", it) } }
             closeLocked()
             _state.value = BoxState.Ejected
         }
@@ -228,6 +239,10 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or
             (if (android.os.Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
         usbManager.requestPermission(candidate.usbDevice, PendingIntent.getBroadcast(context, 0, intent, flags))
+    }
+
+    private fun flushLocked() {
+        partition?.let { p -> runCatching { ScsiEject.syncCache(p) }.onFailure { Log.w(TAG, "sync cache", it) } }
     }
 
     private fun closeLocked() {
@@ -388,6 +403,8 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
                         syncedAt = System.currentTimeMillis(),
                     )
                 )
+                // Anche se poi il box viene staccato senza "Espelli", i dati sono scritti davvero
+                flushLocked()
                 _sync.value = _sync.value?.copy(current = tracks.size, skipped = skipped, finished = true)
                 updateFiguresLocked(mki, *listOfNotNull(id, oldId).toTypedArray())
                 true
@@ -466,6 +483,7 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
                 // Le playlist che usavano quell'ID non sono più sul box
                 dao.allPlaylists().filter { it.syncedFigureId == b.figureId }
                     .forEach { dao.update(it.copy(syncedFigureId = null, syncedTrackIds = null)) }
+                flushLocked()
                 updateFiguresLocked(mki, b.figureId)
                 true
             }.getOrElse {

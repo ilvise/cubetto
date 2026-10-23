@@ -23,6 +23,7 @@
     <string name="reread">Relire</string>
     <string name="box_ejected">FABA™ éjectée</string>
     <string name="box_ejected_hint">Vous pouvez la débrancher en toute sécurité.</string>
+    <string name="box_replug">La FABA™ a été éjectée : débranchez le câble puis rebranchez-le.</string>
     <string name="reconnect">Reconnecter</string>
     <string name="close">Fermer</string>
     <string name="create_new_figure">Créer une nouvelle figurine</string>

@@ -23,6 +23,7 @@
     <string name="reread">Volver a leer</string>
     <string name="box_ejected">FABA™ expulsada</string>
     <string name="box_ejected_hint">Ya puedes desconectarla con seguridad.</string>
+    <string name="box_replug">La FABA™ se ha expulsado: desconecta el cable y vuelve a conectarlo.</string>
     <string name="reconnect">Reconectar</string>
     <string name="close">Cerrar</string>
     <string name="create_new_figure">Crear una figura nueva</string>
