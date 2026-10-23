@@ -14,7 +14,6 @@ import it.cubetto.app.data.CubettoDao
 import it.cubetto.app.data.Playlist
 import it.cubetto.app.data.Track
 import it.cubetto.app.data.TrackStatus
-import it.cubetto.app.faba.Id3
 import it.cubetto.app.faba.Mp3Frames
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -32,9 +31,7 @@ import me.jahnen.libaums.core.UsbMassStorageDevice
 import me.jahnen.libaums.core.driver.BlockDeviceDriver
 import me.jahnen.libaums.core.fs.FileSystem
 import me.jahnen.libaums.core.fs.UsbFile
-import me.jahnen.libaums.core.fs.UsbFileOutputStream
 import me.jahnen.libaums.core.fs.UsbFileStreamFactory
-import java.io.BufferedOutputStream
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -360,61 +357,29 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
             try {
                 val root = fs.rootDirectory
                 val mki = root.search(MKI_DIR) ?: root.createDirectory(MKI_DIR)
-                FatShortNames.fix(mki)
-
-                // Se l'ID è cambiato, la vecchia cartella era nostra: la togliamo
                 val oldId = playlist.syncedFigureId
-                if (oldId != null && oldId != id) mki.search("K$oldId")?.delete()
-
-                val ours = playlist.syncedFigureId == id && playlist.syncedTrackIds != null
-                var folder = mki.search("K$id")
+                val ours = oldId == id && playlist.syncedTrackIds != null
+                val writer = FigureWriter(mki, id)
                 var backupDone = false
-                if (folder != null && !ours) {
-                    // Il segnaposto da ~360 KB del FABA™ si sovrascrive e basta, senza backup
+                // Se l'ID è cambiato la vecchia cartella era nostra e si toglie; se la cartella non è
+                // nostra si svuota del tutto, dopo il backup (non del solo segnaposto da ~360 KB)
+                writer.prepare(oldId, ours) { folder ->
                     val files = folder.listFiles().filter { !it.isDirectory }
                     if (files.sumOf { it.length } > PLACEHOLDER_MAX_BYTES) {
                         backupLocked(fs, folder, id)
                         backupDone = true
                     }
-                    files.forEach { it.delete() }
                 }
-                if (folder == null) folder = mki.createDirectory("K$id")
-                // Anche sulle cartelle e sui file già scritti: ripara le copie fatte prima della correzione
-                FatShortNames.fix(folder)
                 val prevIds = if (ours) playlist.syncedTrackIds!!.split(",") else emptyList()
-
-                val plan = tracks.mapIndexed { i, t ->
-                    val name = "CP%02d.MKI".format(i + 1)
-                    val size = Id3.encodedSize(File(t.localPath!!), id, i + 1)
-                    val existing = folder.search(name)
-                    val unchanged = prevIds.getOrNull(i) == t.id.toString() && existing?.length == size
-                    Triple(t, name, if (unchanged) -1L else size)
-                }
-                val needed = plan.sumOf { (_, name, size) -> if (size < 0) 0L else size - (folder.search(name)?.length ?: 0L) }
+                val plan = writer.plan(tracks.map { File(it.localPath!!) }) { i -> prevIds.getOrNull(i) == tracks[i].id.toString() }
+                val needed = writer.neededBytes(plan)
                 _sync.value = _sync.value?.copy(backupDone = backupDone, neededBytes = needed)
                 if (needed > fs.freeSpace) return@withLock fail(SyncError.NO_SPACE)
 
                 var skipped = 0
-                plan.forEachIndexed { i, (t, name, size) ->
+                writer.write(plan) { i, copied ->
                     _sync.value = _sync.value?.copy(current = i + 1, skipped = skipped)
-                    if (size < 0) {
-                        folder.search(name)?.let(FatShortNames::fix)
-                        skipped++
-                        return@forEachIndexed
-                    }
-                    folder.search(name)?.delete()
-                    val file = folder.createFile(name)
-                    FatShortNames.fix(file)
-                    // Allocare subito tutti i cluster e scrivere a blocchi grandi è molto più veloce
-                    file.length = size
-                    BufferedOutputStream(UsbFileOutputStream(file), WRITE_BUFFER).use { out ->
-                        Id3.writeFaba(File(t.localPath!!), id, i + 1, out)
-                    }
-                }
-                // Tracce in più rimaste da una versione precedente
-                folder.listFiles().forEach { f ->
-                    val n = CP_FILE.matchEntire(f.name)?.groupValues?.get(1)?.toIntOrNull()
-                    if (n != null && n > tracks.size) f.delete()
+                    if (!copied) skipped++
                 }
                 dao.update(
                     playlist.copy(
@@ -518,7 +483,6 @@ class FabaUsb(private val context: Context, private val dao: CubettoDao) {
         /** Ogni cartella ha un file segnaposto da ~360 KB: sotto questa soglia la cartella è "vuota". */
         const val PLACEHOLDER_MAX_BYTES = 400 * 1024L
         private const val OPEN_ATTEMPTS = 4
-        private const val WRITE_BUFFER = 512 * 1024
         private const val ACTION_PERMISSION = "it.cubetto.app.USB_PERMISSION"
         private val FIGURE_DIR = Regex("""K\d{4}""")
         private val CP_FILE = Regex("""CP(\d{2})(\.MKI)?""", RegexOption.IGNORE_CASE)
