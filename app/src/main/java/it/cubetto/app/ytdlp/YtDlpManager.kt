@@ -5,6 +5,7 @@ import android.util.Log
 import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLRequest
+import it.cubetto.app.BuildConfig
 import it.cubetto.app.data.AudioOptions
 import it.cubetto.app.data.Settings
 import kotlinx.coroutines.CompletableDeferred
@@ -57,9 +58,13 @@ class YtDlpManager(private val context: Context, private val settings: Settings)
 
     suspend fun awaitReady() = ready.await()
 
-    /** Controlla GitHub al massimo una volta al giorno, a meno che [force]. */
+    /**
+     * Controlla GitHub al massimo una volta al giorno, a meno che [force]. Nella build F-Droid
+     * ([BuildConfig.YTDLP_AUTO_UPDATE] spento) solo quando lo chiede l'utente ([force]).
+     */
     suspend fun updateIfNeeded(force: Boolean = false) = withContext(Dispatchers.IO) {
         awaitReady()
+        if (!force && !BuildConfig.YTDLP_AUTO_UPDATE) return@withContext
         val now = System.currentTimeMillis()
         if (!force && now - settings.state.value.lastYtDlpCheck < DAY_MS) return@withContext
         _status.value = YtDlpStatus.Checking

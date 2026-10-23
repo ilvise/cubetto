@@ -1,0 +1,5 @@
+• Aiuto ben visibile quando si scrive un tag NFC: tag consigliati e statuine fai da te
+• APK di release firmato
+• L'app cifra soltanto: non decifra mai i file del FABA™
+• Lettura del box più veloce, espulsione sicura, brani identici a myfaba-hacks
+• Build F-Droid: yt-dlp si aggiorna solo quando premi "Controlla ora"

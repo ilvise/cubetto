@@ -1,0 +1,5 @@
+• Clearly visible help when writing an NFC tag: recommended tags and DIY figures
+• Signed release APK
+• The app only encrypts: it never decrypts FABA™ files
+• Faster box reading, safe eject, tracks identical to myfaba-hacks
+• F-Droid build: yt-dlp is updated only when you tap "Check now"

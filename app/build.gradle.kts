@@ -34,12 +34,16 @@ android {
         applicationId = "it.cubetto.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 10
-        versionName = "1.0.1"
+        versionCode = 11
+        versionName = "1.0.2"
         ndk { abiFilters += "arm64-v8a" }
         // Lingue in cui FABA™ è distribuito (vedi TAGS.md) + inglese come fallback
         resourceConfigurations += listOf("en", "it", "es", "fr", "nl", "ca")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Aggiornamento automatico di yt-dlp da GitHub (codice scaricato a runtime): la build
+        // F-Droid lo spegne con -PytdlpAutoUpdate=false; resta "Controlla ora" nelle impostazioni
+        val autoUpdate = (project.findProperty("ytdlpAutoUpdate") as String?)?.toBoolean() ?: true
+        buildConfigField("boolean", "YTDLP_AUTO_UPDATE", autoUpdate.toString())
     }
 
     androidResources {

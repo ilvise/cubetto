@@ -1,0 +1,17 @@
+<p>Cubetto crea <b>statuine personalizzate per il FABA™ di prima generazione</b> (quello offline), a partire da link YouTube o da file audio del telefono.</p>
+
+<p><b>Il flusso:</b> link o file → MP3 → playlist → formato FABA™ con l'ID scelto → copia via USB sul box → scrittura del tag NFC.</p>
+
+<ul>
+<li><b>Brani</b> da YouTube (link, playlist, menu Condividi) o dal dispositivo (MP3, M4A, OPUS, WAV, video), con volume uniformato, taglio dei silenzi, divisione per capitoli e SponsorBlock.</li>
+<li><b>Statuine</b> con nome, colore, foto e brani riordinabili, più un lettore integrato.</li>
+<li><b>Scelta dell'ID</b> basata sul registro di myfaba-hacks, con i consigli sugli ID delle statuine vendute in altre lingue.</li>
+<li><b>Copia via USB OTG</b> sul box, senza root: backup e ripristino, copia solo dei brani cambiati, espulsione sicura.</li>
+<li><b>NFC</b>: scrittura e lettura dei tag FABA™ (NTAG213/215), con una guida ai tag giusti e alle statuine fai da te in cartone o stampate in 3D.</li>
+</ul>
+
+<p>I file sono identici byte per byte a quelli creati da <a href="https://github.com/wansors/myfaba-hacks">myfaba-hacks</a>, il progetto su cui si basa Cubetto.</p>
+
+<p><b>No alla pirateria.</b> Cubetto di proposito non decifra i file del FABA™: scrive solo i tuoi brani. Le statuine originali hanno una qualità imparagonabile a quelle fatte in casa; Cubetto aggiunge solo ciò che non offrono, come le canzoni di famiglia o le registrazioni dei nonni.</p>
+
+<p>FABA™ e myFABA™ sono marchi di FABA S.r.l. Cubetto è un progetto indipendente, non affiliato né approvato da FABA S.r.l. Solo per il FABA™ di prima generazione: FABA+ non è supportato. Usalo solo con contenuti che hai il diritto di scaricare.</p>

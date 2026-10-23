@@ -1,0 +1,17 @@
+<p>Cubetto creates <b>custom figures for the first-generation FABA™</b> storytelling box (the offline one), from YouTube links or audio files on your phone.</p>
+
+<p><b>How it works:</b> link or file → MP3 → playlist → FABA™ format with the chosen ID → USB copy to the box → NFC tag writing.</p>
+
+<ul>
+<li><b>Tracks</b> from YouTube (links, playlists, the Share menu) or from the device (MP3, M4A, OPUS, WAV, videos), with volume levelling, silence trimming, chapter splitting and SponsorBlock.</li>
+<li><b>Figures</b> with name, colour, photo and drag-and-drop track order, plus a built-in player.</li>
+<li><b>ID picker</b> based on the myfaba-hacks registry, suggesting IDs of figures sold in other languages.</li>
+<li><b>USB OTG copy</b> to the box, no root: backup and restore, only changed tracks are copied, safe eject.</li>
+<li><b>NFC</b>: writes and reads FABA™ tags (NTAG213/215), with a guide to the right tags and to DIY figures made of cardboard or 3D-printed.</li>
+</ul>
+
+<p>The files are byte-for-byte identical to those made by <a href="https://github.com/wansors/myfaba-hacks">myfaba-hacks</a>, the project Cubetto is built on.</p>
+
+<p><b>No piracy.</b> Cubetto deliberately does not decrypt FABA™ files: it only writes your own tracks. Original figures are of a quality that cannot be compared with homemade ones; Cubetto only adds what they cannot offer, such as family songs or grandparents' recordings.</p>
+
+<p>FABA™ and myFABA™ are trademarks of FABA S.r.l. Cubetto is an independent project, not affiliated with or endorsed by FABA S.r.l. First-generation FABA™ only: FABA+ is not supported. Use it only with content you have the right to download.</p>
