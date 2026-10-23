@@ -22,3 +22,8 @@ K0*/
 *.ogg
 *.flac
 *.aac
+
+# Chiavi di firma: mai nel repository (stanno in ~/.cubetto-signing/)
+*.jks
+*.keystore
+keystore.properties

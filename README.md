@@ -116,6 +116,9 @@ Italiano, spagnolo, catalano, francese, olandese (i paesi del registro FABA™) 
 # APK: app/build/outputs/apk/debug/app-debug.apk
 ```
 
+- **Release firmata**: `./gradlew assembleRelease` firma l'APK con la chiave indicata in
+  `~/.cubetto-signing/keystore.properties` (o nel file della variabile `CUBETTO_KEYSTORE`), con
+  `storeFile`, `storePassword`, `keyAlias` e `keyPassword`. Senza quel file l'APK di release non è firmato.
 - Le traduzioni si modificano in `tools/strings.py`, poi si rigenerano con `python3 tools/strings.py`.
 - Per confrontare i brani con quelli originali del box:
   `FABA_ORIGINAL_DIR=/percorso/K0016 ./gradlew testDebugUnitTest`.

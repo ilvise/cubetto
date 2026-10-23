@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -5,8 +7,27 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+/**
+ * Chiave di firma delle release: fuori dal repository, in ~/.cubetto-signing/keystore.properties
+ * (o nel file indicato da CUBETTO_KEYSTORE) con storeFile, storePassword, keyAlias, keyPassword.
+ * Se manca, assembleRelease produce un APK non firmato.
+ */
+val signingProps = Properties().apply {
+    val file = File(System.getenv("CUBETTO_KEYSTORE") ?: "${System.getProperty("user.home")}/.cubetto-signing/keystore.properties")
+    if (file.isFile) file.inputStream().use { load(it) }
+}
+
 android {
     namespace = "it.cubetto.app"
+
+    signingConfigs {
+        if (!signingProps.isEmpty) create("release") {
+            storeFile = File(signingProps.getProperty("storeFile"))
+            storePassword = signingProps.getProperty("storePassword")
+            keyAlias = signingProps.getProperty("keyAlias")
+            keyPassword = signingProps.getProperty("keyPassword")
+        }
+    }
     compileSdk = 35
 
     defaultConfig {
@@ -28,6 +49,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
