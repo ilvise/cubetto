@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Eject
 import androidx.compose.material.icons.rounded.ErrorOutline
@@ -52,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import it.cubetto.app.R
 import it.cubetto.app.ui.AppViewModel
 import it.cubetto.app.ui.components.ProgressBar
+import it.cubetto.app.ui.components.RoundIconButton
 import it.cubetto.app.ui.components.SectionHeader
 import it.cubetto.app.ui.components.formatBytes
 import it.cubetto.app.ui.theme.Cubo
@@ -62,7 +64,7 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-fun BoxScreen(vm: AppViewModel, onOpen: (Long) -> Unit) {
+fun BoxScreen(vm: AppViewModel, onOpen: (Long) -> Unit, onHelp: () -> Unit) {
     val box by vm.box.collectAsStateWithLifecycle()
     val sync by vm.sync.collectAsStateWithLifecycle()
     val playlists by vm.playlists.collectAsStateWithLifecycle()
@@ -79,7 +81,12 @@ fun BoxScreen(vm: AppViewModel, onOpen: (Long) -> Unit) {
     val restoreFail = stringResource(R.string.restore_failed)
 
     LazyColumn(contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 100.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Text(stringResource(R.string.box_title), style = MaterialTheme.typography.displaySmall) }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.box_title), style = MaterialTheme.typography.displaySmall, modifier = Modifier.weight(1f))
+                RoundIconButton(Icons.AutoMirrored.Rounded.HelpOutline, stringResource(R.string.guide), onHelp)
+            }
+        }
         item {
             Hero(
                 box, busy = sync?.finished == false,

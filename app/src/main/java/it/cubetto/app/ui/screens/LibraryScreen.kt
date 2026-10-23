@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
@@ -66,7 +67,7 @@ import it.cubetto.app.usb.BoxState
 private enum class Filter { FAVORITES, ALL, ON_BOX, TO_SYNC }
 
 @Composable
-fun LibraryScreen(vm: AppViewModel, onOpen: (Long) -> Unit, onCreate: () -> Unit, onSettings: () -> Unit, onBox: () -> Unit) {
+fun LibraryScreen(vm: AppViewModel, onOpen: (Long) -> Unit, onCreate: () -> Unit, onSettings: () -> Unit, onBox: () -> Unit, onHelp: () -> Unit) {
     val playlists by vm.playlists.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
     val box by vm.box.collectAsStateWithLifecycle()
@@ -92,16 +93,18 @@ fun LibraryScreen(vm: AppViewModel, onOpen: (Long) -> Unit, onCreate: () -> Unit
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(stringResource(R.string.library_greeting), style = MaterialTheme.typography.bodyMedium, color = Cubo.Muted)
-                        Text(stringResource(R.string.tab_library), style = MaterialTheme.typography.displaySmall)
+                // Saluto e pulsanti sulla stessa riga: così il titolo ha tutta la larghezza
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.library_greeting), style = MaterialTheme.typography.bodyMedium, color = Cubo.Muted, modifier = Modifier.weight(1f).padding(end = 8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            RoundIconButton(Icons.Rounded.Contactless, stringResource(R.string.read_figure), { reading = true })
+                            RoundIconButton(Icons.Rounded.Search, stringResource(R.string.search), { search = if (search == null) "" else null })
+                            RoundIconButton(Icons.Rounded.Settings, stringResource(R.string.settings), onSettings)
+                            RoundIconButton(Icons.AutoMirrored.Rounded.HelpOutline, stringResource(R.string.guide), onHelp)
+                        }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        RoundIconButton(Icons.Rounded.Contactless, stringResource(R.string.read_figure), { reading = true })
-                        RoundIconButton(Icons.Rounded.Search, stringResource(R.string.search), { search = if (search == null) "" else null })
-                        RoundIconButton(Icons.Rounded.Settings, stringResource(R.string.settings), onSettings)
-                    }
+                    Text(stringResource(R.string.tab_library), style = MaterialTheme.typography.displaySmall)
                 }
                 if (search != null) {
                     OutlinedTextField(

@@ -43,6 +43,8 @@ import it.cubetto.app.ui.screens.AddScreen
 import it.cubetto.app.ui.screens.BoxScreen
 import it.cubetto.app.ui.screens.ChangeIdScreen
 import it.cubetto.app.ui.screens.CreateScreen
+import it.cubetto.app.ui.screens.GUIDE_PAGE_USB
+import it.cubetto.app.ui.screens.GuideDialog
 import it.cubetto.app.ui.screens.LibraryScreen
 import it.cubetto.app.ui.screens.PlaylistScreen
 import it.cubetto.app.ui.screens.SettingsScreen
@@ -86,6 +88,9 @@ fun CubettoRoot(vm: AppViewModel, event: LaunchEvent?, onEventHandled: () -> Uni
     val backStack by nav.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
     var playerOpen by rememberSaveable { mutableStateOf(false) }
+    val settings by vm.settings.collectAsStateWithLifecycle()
+    // Pagina da cui aprire la guida col tasto ?; al primo avvio si apre da sola
+    var guidePage by rememberSaveable { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(message) {
         message?.let { snackbar.showSnackbar(it); vm.consumeMessage() }
@@ -133,9 +138,9 @@ fun CubettoRoot(vm: AppViewModel, event: LaunchEvent?, onEventHandled: () -> Uni
         Column(Modifier.fillMaxSize().padding(padding)) {
             NavHost(nav, startDestination = Routes.LIBRARY, modifier = Modifier.weight(1f)) {
                 composable(Routes.LIBRARY) {
-                    LibraryScreen(vm, onOpen = { nav.navigate(Routes.playlist(it)) }, onCreate = { nav.navigateTab(Routes.CREATE) }, onSettings = { nav.navigate(Routes.SETTINGS) }, onBox = { nav.navigateTab(Routes.BOX) })
+                    LibraryScreen(vm, onOpen = { nav.navigate(Routes.playlist(it)) }, onCreate = { nav.navigateTab(Routes.CREATE) }, onSettings = { nav.navigate(Routes.SETTINGS) }, onBox = { nav.navigateTab(Routes.BOX) }, onHelp = { guidePage = 0 })
                 }
-                composable(Routes.BOX) { BoxScreen(vm, onOpen = { nav.navigate(Routes.playlist(it)) }) }
+                composable(Routes.BOX) { BoxScreen(vm, onOpen = { nav.navigate(Routes.playlist(it)) }, onHelp = { guidePage = GUIDE_PAGE_USB }) }
                 composable(
                     Routes.ADD,
                     arguments = listOf(navArgument("playlist") { type = NavType.LongType; defaultValue = -1L }),
@@ -169,6 +174,9 @@ fun CubettoRoot(vm: AppViewModel, event: LaunchEvent?, onEventHandled: () -> Uni
             now?.let {
                 MiniPlayer(it, vm, onOpen = { playerOpen = true }, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
                 if (playerOpen) PlayerSheet(it, vm, onDismiss = { playerOpen = false })
+            }
+            if (guidePage != null || !settings.guideSeen) {
+                GuideDialog(guidePage ?: 0, onDone = { vm.markGuideSeen(); guidePage = null })
             }
         }
     }

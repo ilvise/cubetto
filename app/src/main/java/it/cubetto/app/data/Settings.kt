@@ -20,6 +20,7 @@ data class AppSettings(
     val audio: AudioOptions = AudioOptions(),
     val autoSync: Boolean = true,
     val warningDismissed: Boolean = false,
+    val guideSeen: Boolean = false,
     val lastYtDlpCheck: Long = 0,
 )
 
@@ -39,6 +40,7 @@ class Settings(context: Context) {
         ),
         autoSync = prefs.getBoolean("autoSync", true),
         warningDismissed = prefs.getBoolean("warningDismissed", false),
+        guideSeen = prefs.getBoolean("guideSeen", false),
         lastYtDlpCheck = prefs.getLong("lastYtDlpCheck", 0),
     )
 
@@ -52,6 +54,7 @@ class Settings(context: Context) {
             .putBoolean("mono", s.audio.mono)
             .putBoolean("autoSync", s.autoSync)
             .putBoolean("warningDismissed", s.warningDismissed)
+            .putBoolean("guideSeen", s.guideSeen)
             .putLong("lastYtDlpCheck", s.lastYtDlpCheck)
             .apply()
         _state.value = s

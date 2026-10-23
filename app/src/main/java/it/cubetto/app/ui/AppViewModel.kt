@@ -258,6 +258,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun setAudio(block: (AudioOptions) -> AudioOptions) = c.settings.update { it.copy(audio = block(it.audio)) }
     fun setAutoSync(on: Boolean) = c.settings.update { it.copy(autoSync = on) }
     fun dismissWarning() = c.settings.update { it.copy(warningDismissed = true) }
+    fun markGuideSeen() = c.settings.update { it.copy(guideSeen = true) }
     fun updateYtDlp() = viewModelScope.launch { c.ytDlp.updateIfNeeded(force = true) }
     val ytDlpVersion: String? get() = c.ytDlp.version
 
