@@ -1,0 +1,3 @@
+• Step-by-step guide on first launch, available again with the ? button
+• Explains how the box works over USB: OTG cable, permission, automatic copy, backup and eject
+• The ? button in the Box tab opens the USB page directly

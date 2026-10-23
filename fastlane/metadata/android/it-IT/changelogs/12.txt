@@ -1,0 +1,3 @@
+• Guida passo passo al primo avvio, sempre consultabile con il tasto ?
+• Spiega come funziona il box via USB: cavo OTG, permesso, copia automatica, backup ed espulsione
+• Il tasto ? nella scheda Box apre direttamente la pagina sull'USB

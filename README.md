@@ -10,7 +10,7 @@
 **Custom figures for the first-generation FABA™, made from YouTube or your own audio files.**
 
 ![Status](https://img.shields.io/badge/status-beta-blueviolet?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-1.0.2-E3262B?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.0.3-E3262B?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-GPL--3.0-blue?style=for-the-badge)
 
 ![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
@@ -79,6 +79,8 @@ Thank you!
 <sub>Images from the Italian mockups in <code>docs/mockup/</code>: the real app may differ in the details.</sub>
 
 ## ✨ Features
+
+- 🧭 **Built-in guide**: it opens on first launch and again with the **?** button; it explains every step, and the USB box in detail.
 
 ### 🎵 Tracks
 - **From YouTube**: paste a link or use *Share* from the YouTube app. Playlists become several tracks.

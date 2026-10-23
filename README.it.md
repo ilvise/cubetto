@@ -10,7 +10,7 @@
 **Statuine personalizzate per il FABA™ di prima generazione, a partire da YouTube o dai tuoi file audio.**
 
 ![Stato](https://img.shields.io/badge/stato-beta-blueviolet?style=for-the-badge)
-![Versione](https://img.shields.io/badge/versione-1.0.2-E3262B?style=for-the-badge)
+![Versione](https://img.shields.io/badge/versione-1.0.3-E3262B?style=for-the-badge)
 ![Licenza](https://img.shields.io/badge/licenza-GPL--3.0-blue?style=for-the-badge)
 
 ![Android](https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white)
@@ -81,6 +81,8 @@ quello che fa `redele.py` per il FABA™ di prima generazione. Grazie!
 <sub>Immagini dai mockup in <code>docs/mockup/</code>: l'app vera può differire nei dettagli.</sub>
 
 ## ✨ Funzioni
+
+- 🧭 **Guida integrata**: si apre al primo avvio e poi con il tasto **?**; spiega ogni passo, e il box via USB nei dettagli.
 
 ### 🎵 Brani
 - **Da YouTube**: incolla un link oppure usa *Condividi* dall'app YouTube. Le playlist diventano più brani.

@@ -34,8 +34,8 @@ android {
         applicationId = "it.cubetto.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 11
-        versionName = "1.0.2"
+        versionCode = 12
+        versionName = "1.0.3"
         ndk { abiFilters += "arm64-v8a" }
         // Lingue in cui FABA™ è distribuito (vedi TAGS.md) + inglese come fallback
         resourceConfigurations += listOf("en", "it", "es", "fr", "nl", "ca")
