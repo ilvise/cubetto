@@ -73,6 +73,9 @@ class FatShortNamesTest {
         val files = rawEntries(disk, kRaw.third).filter { !it.first.startsWith(".") }
         assertEquals(listOf("CP01    MKI", "CP02    MKI"), files.map { it.first })
         assertTrue(files.none { it.second == 0x0F })
+        // Come una copia da PC: file con il solo bit ARCHIVE, cartelle con il solo bit DIRECTORY
+        assertEquals(listOf(0x20, 0x20), files.map { it.second })
+        assertEquals(0x10, kRaw.second)
 
         // E libaums, riaprendo il disco, ritrova i file con i contenuti giusti
         val again = Fat32FileSystem.read(disk)!!
@@ -103,6 +106,8 @@ class FatShortNamesTest {
 
         val mkiRaw = rawEntries(disk, 2).single { it.first == "MKI01      " }
         val kRaw = rawEntries(disk, mkiRaw.third).single { it.first == "K0201      " }
-        assertEquals(listOf("CP01    MKI"), rawEntries(disk, kRaw.third).filter { !it.first.startsWith(".") }.map { it.first })
+        val repaired = rawEntries(disk, kRaw.third).filter { !it.first.startsWith(".") }
+        assertEquals(listOf("CP01    MKI"), repaired.map { it.first })
+        assertEquals(0x20, repaired.single().second)
     }
 }
