@@ -163,6 +163,13 @@
     <string name="nfc_err_locked">L\'etiqueta està bloquejada o no és compatible.</string>
     <string name="nfc_err_lost">L\'etiqueta s\'ha mogut: mantén-la quieta i torna-ho a provar.</string>
     <string name="nfc_err_verify">La verificació no quadra: torna a acostar l\'etiqueta.</string>
+    <string name="nfc_help_button">Quines etiquetes fer servir? Ajuda</string>
+    <string name="nfc_help_tags_title">Etiquetes recomanades</string>
+    <string name="nfc_help_tags_text">Fes servir etiquetes NTAG213 o NTAG215 originals de NXP. Molts clons barats (UID que comença per 1D o FF) no els llegeix la FABA™. Aquestes funcionen:</string>
+    <string name="nfc_help_diy_title">Figures fetes a casa</string>
+    <string name="nfc_help_diy_text">Retalla un tros de cartró i enganxa-hi l\'etiqueta a sota, o imprimeix una base amb una impressora 3D:</string>
+    <string name="nfc_help_link_base">Base per a figures FABA™</string>
+    <string name="nfc_help_link_photo">Disc FABA™ amb marc de fotos</string>
     <string name="nfc_bring_tag">Acosta l\'etiqueta</string>
     <string name="nfc_bring_figure">Acosta la figura</string>
     <string name="nfc_bring_hint">Recolza el disc a la part de darrere del telèfon, a prop de la càmera, i mantén-lo quiet un segon.</string>

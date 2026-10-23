@@ -163,6 +163,13 @@
     <string name="nfc_err_locked">La etiqueta está bloqueada o no es compatible.</string>
     <string name="nfc_err_lost">La etiqueta se ha movido: mantenla quieta y reinténtalo.</string>
     <string name="nfc_err_verify">La verificación no coincide: vuelve a acercar la etiqueta.</string>
+    <string name="nfc_help_button">¿Qué etiquetas usar? Ayuda</string>
+    <string name="nfc_help_tags_title">Etiquetas recomendadas</string>
+    <string name="nfc_help_tags_text">Usa etiquetas NTAG213 o NTAG215 originales de NXP. Muchos clones baratos (UID que empieza por 1D o FF) no los lee la FABA™. Estas funcionan:</string>
+    <string name="nfc_help_diy_title">Figuras caseras</string>
+    <string name="nfc_help_diy_text">Recorta un trozo de cartón y pega la etiqueta debajo, o imprime una base con una impresora 3D:</string>
+    <string name="nfc_help_link_base">Base para figuras FABA™</string>
+    <string name="nfc_help_link_photo">Disco FABA™ con marco de fotos</string>
     <string name="nfc_bring_tag">Acerca la etiqueta</string>
     <string name="nfc_bring_figure">Acerca la figura</string>
     <string name="nfc_bring_hint">Apoya el disco en la parte trasera del teléfono, cerca de la cámara, y mantenlo quieto un segundo.</string>

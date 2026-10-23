@@ -163,6 +163,13 @@
     <string name="nfc_err_locked">De tag is vergrendeld of niet compatibel.</string>
     <string name="nfc_err_lost">De tag bewoog: houd hem stil en probeer opnieuw.</string>
     <string name="nfc_err_verify">Controle mislukt: leg de tag opnieuw neer.</string>
+    <string name="nfc_help_button">Welke tags gebruiken? Hulp</string>
+    <string name="nfc_help_tags_title">Aanbevolen tags</string>
+    <string name="nfc_help_tags_text">Gebruik originele NXP NTAG213- of NTAG215-tags. Veel goedkope klonen (UID die met 1D of FF begint) worden niet gelezen door de FABA™. Deze werken:</string>
+    <string name="nfc_help_diy_title">Zelfgemaakte figuren</string>
+    <string name="nfc_help_diy_text">Knip een stuk karton uit en plak de tag eronder, of print een voet met een 3D-printer:</string>
+    <string name="nfc_help_link_base">Voet voor FABA™-figuren</string>
+    <string name="nfc_help_link_photo">FABA™-schijf met fotolijst</string>
     <string name="nfc_bring_tag">Houd de tag ertegen</string>
     <string name="nfc_bring_figure">Houd het figuur ertegen</string>
     <string name="nfc_bring_hint">Leg het schijfje op de achterkant van de telefoon, bij de camera, en houd het een seconde stil.</string>

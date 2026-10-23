@@ -3,7 +3,12 @@ package it.cubetto.app.ui.screens
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.Canvas
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +22,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.HelpOutline
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Warning
@@ -32,6 +41,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +54,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -69,7 +82,8 @@ fun NfcSheet(vm: AppViewModel, writeId: String?, title: String?, onDismiss: () -
     }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Cubo.Ground) {
         Column(
-            Modifier.fillMaxWidth().padding(horizontal = 22.dp).padding(bottom = 24.dp).navigationBarsPadding(),
+            // Con l'aiuto aperto il contenuto può superare lo schermo
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp).padding(bottom = 24.dp).navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -77,6 +91,7 @@ fun NfcSheet(vm: AppViewModel, writeId: String?, title: String?, onDismiss: () -
                 Row(Modifier.clip(RoundedCornerShape(50)).background(Cubo.Ink).padding(horizontal = 12.dp, vertical = 6.dp)) {
                     Text(stringResource(R.string.nfc_header, writeId, title ?: ""), color = Cubo.Yellow, style = MaterialTheme.typography.titleSmall)
                 }
+                TagHelp()
             }
             when {
                 adapter == null -> Message(Icons.Rounded.ErrorOutline, stringResource(R.string.nfc_unavailable), null, Cubo.OrangeInk, Cubo.Orange)
@@ -159,6 +174,57 @@ private fun Waiting(write: Boolean, compact: Boolean = false) {
                 Text(stringResource(R.string.nfc_chip_auto_text), style = MaterialTheme.typography.bodySmall, color = Cubo.Muted)
             }
         }
+    }
+}
+
+/** Aiuto ben visibile quando si scrive un tag: quali tag comprare e come fare una statuina. */
+@Composable
+private fun TagHelp() {
+    var open by rememberSaveable { mutableStateOf(false) }
+    val uri = LocalUriHandler.current
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Cubo.YellowSoft)
+            .border(2.dp, Cubo.Yellow, RoundedCornerShape(20.dp)),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().clickable { open = !open }.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(Icons.AutoMirrored.Rounded.HelpOutline, null, tint = Cubo.YellowInk)
+            Text(stringResource(R.string.nfc_help_button), style = MaterialTheme.typography.titleMedium, color = Cubo.YellowInk, modifier = Modifier.weight(1f))
+            Icon(if (open) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, null, tint = Cubo.YellowInk)
+        }
+        AnimatedVisibility(open) {
+            Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.nfc_help_tags_title), style = MaterialTheme.typography.titleSmall, color = Cubo.Ink)
+                Text(stringResource(R.string.nfc_help_tags_text), style = MaterialTheme.typography.bodyMedium, color = Cubo.Ink)
+                HelpLink("Amazon IT") { uri.openUri("https://www.amazon.it/dp/B07Q7FZDSC") }
+                HelpLink("Amazon ES") { uri.openUri("https://www.amazon.es/dp/B07Q7FZDSC") }
+                HelpLink("Amazon DE") { uri.openUri("https://www.amazon.de/gp/product/B07Q43PXMR/") }
+                Spacer(Modifier.height(4.dp))
+                Text(stringResource(R.string.nfc_help_diy_title), style = MaterialTheme.typography.titleSmall, color = Cubo.Ink)
+                Text(stringResource(R.string.nfc_help_diy_text), style = MaterialTheme.typography.bodyMedium, color = Cubo.Ink)
+                HelpLink(stringResource(R.string.nfc_help_link_base)) {
+                    uri.openUri("https://www.printables.com/model/1378409-base-template-for-faba-audioplayer-figurines/files")
+                }
+                HelpLink(stringResource(R.string.nfc_help_link_photo)) {
+                    uri.openUri("https://www.printables.com/model/1876485-faba-disc-with-photoframe/comments/3668118")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HelpLink(label: String, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Cubo.Card).clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = Cubo.BlueInk, modifier = Modifier.weight(1f))
+        Icon(Icons.AutoMirrored.Rounded.OpenInNew, null, tint = Cubo.BlueInk, modifier = Modifier.size(18.dp))
     }
 }
 

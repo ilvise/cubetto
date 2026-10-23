@@ -168,6 +168,13 @@
     <string name="nfc_err_locked">The tag is write-locked or not compatible.</string>
     <string name="nfc_err_lost">The tag moved: hold it still and try again.</string>
     <string name="nfc_err_verify">Verification failed: place the tag again.</string>
+    <string name="nfc_help_button">Which tags to use? Help</string>
+    <string name="nfc_help_tags_title">Recommended tags</string>
+    <string name="nfc_help_tags_text">Use genuine NXP NTAG213 or NTAG215 tags. Many cheap clones (UID starting with 1D or FF) are not read by the FABA™. These work:</string>
+    <string name="nfc_help_diy_title">DIY figures</string>
+    <string name="nfc_help_diy_text">Cut out a piece of cardboard and glue the tag underneath, or 3D-print a base:</string>
+    <string name="nfc_help_link_base">Base for FABA™ figures</string>
+    <string name="nfc_help_link_photo">FABA™ disc with photo frame</string>
     <string name="nfc_bring_tag">Bring the tag close</string>
     <string name="nfc_bring_figure">Bring the figure close</string>
     <string name="nfc_bring_hint">Place the disc on the back of the phone, near the camera, and hold it still for a second.</string>

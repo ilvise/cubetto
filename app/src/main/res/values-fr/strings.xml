@@ -163,6 +163,13 @@
     <string name="nfc_err_locked">Le tag est verrouillé ou incompatible.</string>
     <string name="nfc_err_lost">Le tag a bougé : tenez-le immobile et réessayez.</string>
     <string name="nfc_err_verify">La vérification a échoué : reposez le tag.</string>
+    <string name="nfc_help_button">Quels tags utiliser ? Aide</string>
+    <string name="nfc_help_tags_title">Tags conseillés</string>
+    <string name="nfc_help_tags_text">Utilisez des tags NTAG213 ou NTAG215 NXP d\'origine. Beaucoup de clones bon marché (UID commençant par 1D ou FF) ne sont pas lus par la FABA™. Ceux-ci fonctionnent :</string>
+    <string name="nfc_help_diy_title">Figurines maison</string>
+    <string name="nfc_help_diy_text">Découpez un morceau de carton et collez le tag dessous, ou imprimez une base en 3D :</string>
+    <string name="nfc_help_link_base">Base pour figurines FABA™</string>
+    <string name="nfc_help_link_photo">Disque FABA™ avec cadre photo</string>
     <string name="nfc_bring_tag">Approchez le tag</string>
     <string name="nfc_bring_figure">Approchez la figurine</string>
     <string name="nfc_bring_hint">Posez le disque au dos du téléphone, près de l\'appareil photo, et ne bougez plus une seconde.</string>

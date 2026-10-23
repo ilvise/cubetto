@@ -163,6 +163,13 @@
     <string name="nfc_err_locked">Il tag è bloccato in scrittura o non è compatibile.</string>
     <string name="nfc_err_lost">Il tag si è spostato: tienilo fermo e riprova.</string>
     <string name="nfc_err_verify">La verifica non torna: riprova ad appoggiare il tag.</string>
+    <string name="nfc_help_button">Quali tag usare? Aiuto</string>
+    <string name="nfc_help_tags_title">Tag consigliati</string>
+    <string name="nfc_help_tags_text">Usa tag NTAG213 o NTAG215 originali NXP. Molti cloni economici (UID che inizia per 1D o FF) non vengono letti dal FABA™. Questi funzionano:</string>
+    <string name="nfc_help_diy_title">Statuine fai da te</string>
+    <string name="nfc_help_diy_text">Ritaglia un pezzo di cartone e incollaci sotto il tag, oppure stampa una base con la stampante 3D:</string>
+    <string name="nfc_help_link_base">Base per statuine FABA™</string>
+    <string name="nfc_help_link_photo">Disco FABA™ con cornice per foto</string>
     <string name="nfc_bring_tag">Avvicina il tag</string>
     <string name="nfc_bring_figure">Avvicina la statuina</string>
     <string name="nfc_bring_hint">Appoggia il dischetto sul retro del telefono, vicino alla fotocamera, e tienilo fermo un secondo.</string>
